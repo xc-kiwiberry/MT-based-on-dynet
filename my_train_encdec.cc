@@ -1,0 +1,428 @@
+/**
+ * Train a vanilla encoder decoder lstm network with minibatching
+ * to perform auto-encoding.
+ *
+ * This provide an example of usage of the encdec.h model
+ */
+#include "my_encdec.h"
+#include "my_cl-args.h"
+#include "my_dict.h"
+
+using namespace std;
+using namespace dynet;
+
+typedef pair<vector<int>, vector<int>> pp;
+
+// Sort sentences in descending order of length
+bool comp(const pp& aa, const pp& bb) {
+  return aa.first.size() > bb.first.size();
+}
+
+int fCountSize(const vector<vector<int>>& lines){
+  int cnt = 0;
+  for (const auto & line : lines) cnt += line.size();
+  return cnt;
+}
+
+void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
+  for (int i = 0; i < lines.size(); i++) {
+    mask.push_back(vector<float>());
+    assert(lines[i].size() >= 2);
+    mask[i].push_back(1.);
+    for (int j = 1; j < lines[i].size(); j++) {
+      if (lines[i][j-1] != kEOS) mask[i].push_back(1.);
+      else mask[i].push_back(0.);
+    }
+  }
+}
+
+// Datasets
+  vector<pp> train_data, dev_data;
+  vector<vector<int>> training, dev;
+  vector<vector<int>> training_label, dev_label;
+  vector<vector<float>> train_mask, dev_mask,
+                        train_label_mask, dev_label_mask;
+
+void debug(const vector<float>& v) {
+  for (auto aa: v) cerr << aa << " ";
+    cerr <<endl;
+} 
+
+int main(int argc, char** argv) {
+  // Fetch dynet params ----------------------------------------------------------------------------
+  auto dyparams = dynet::extract_dynet_params(argc, argv);
+  dynet::initialize(dyparams);
+
+  // debug
+  /*
+  ComputationGraph g;
+  vector<float> v = {6,7,8,9};
+  Expression x = input(g, Dim({1}, 4), v);
+  debug(as_vector(x.value()));
+  Expression y = pick_batch_elems(x, {2,2,3,1});
+  debug(as_vector(y.value()));
+  x=x*2;
+  debug(as_vector(x.value()));
+  y=y*2;
+  debug(as_vector(y.value()));
+  return 0;//*/
+
+  // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
+  Params params;
+  get_args(argc, argv, params, TRAIN);
+  // Load datasets ---------------------------------------------------------------------------------
+
+  // Dictionary
+  cerr << "Building dictionary..." << endl;
+  XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
+  //kSOS = 0;
+  kEOS = 0;
+  SRC_VOCAB_SIZE = dictIn.size();
+  TGT_VOCAB_SIZE = dictOut.size();
+  cerr << "Dictionary build success." << endl;
+  cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
+  cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
+
+  // Read training data and fill dictionary
+  string line;
+  int tlc = 0;
+  int ttoks = 0;
+  cerr << "Reading training data from " << params.train_file << "...\n";
+  {
+    ifstream in(params.train_file);
+    assert(in);
+    while (getline(in, line)) {
+      ++tlc;
+      auto tmp = dictIn.read_sentence(line);
+      //tmp.insert(tmp.begin(),kSOS);
+      tmp.push_back(kEOS);
+      training.push_back(tmp);
+      ttoks += training.back().size();
+    }
+    cerr << tlc << " lines, " << ttoks << " tokens\n";
+  }
+  tlc = 0;
+  ttoks = 0;
+  cerr << "Reading training_label data from " << params.train_labels_file << "...\n";
+  {
+	  ifstream in(params.train_labels_file);
+	  assert(in);
+	  while (getline(in, line)) {
+		  ++tlc;
+		  auto tmp = dictOut.read_sentence(line);
+		  //tmp.insert(tmp.begin(), kSOS);
+		  tmp.push_back(kEOS);
+		  training_label.push_back(tmp);
+		  ttoks += training_label.back().size();
+	  }
+	  cerr << tlc << " lines, " << ttoks << " tokens\n";
+  }
+
+  assert(training.size() == training_label.size());
+  for (int i = 0; i < training.size(); i++) {
+  	  if (training[i].size() > 50 || training_label[i].size() > 50) continue;
+	  train_data.push_back(pp(training[i], training_label[i]));
+  }
+  // Sort the training sentences in descending order of length (for minibatching)
+  sort(train_data.begin(), train_data.end(), comp);
+  training.resize(train_data.size());
+  training_label.resize(train_data.size());
+  for (int i = 0; i < train_data.size(); i++) {
+	  training[i] = train_data[i].first;
+	  training_label[i] = train_data[i].second;
+  }
+
+  // Pad the sentences in the same batch with EOS so they are the same length
+  // This modifies the training objective a bit by making it necessary to
+  // predict EOS multiple times, but it's easy and not so harmful
+  for (int i = 0; i < training.size(); i += params.BATCH_SIZE){
+    for (int j = 1; j < params.BATCH_SIZE && i + j < training.size(); ++j){
+      while (training[i + j].size() < training[i].size())
+        training[i + j].push_back(kEOS);
+	  }
+  }
+  for (int i = 0; i < training_label.size(); i += params.BATCH_SIZE) {
+	  size_t maxlen = training_label[i].size();
+	  for (int j = 1; j < params.BATCH_SIZE && i + j < training_label.size(); j++) {
+		  maxlen = max(maxlen, training_label[i + j].size());
+	  }
+	  for (int j = 0; j < params.BATCH_SIZE && i + j < training_label.size(); j++) {
+		  while (training_label[i + j].size() < maxlen)
+			  training_label[i + j].push_back(kEOS);
+	  }
+  }
+  
+  // Read validation dataset
+  int dlc = 0;
+  int dtoks = 0;
+  cerr << "Reading dev data from " << params.dev_file << "...\n";
+  {
+    ifstream in(params.dev_file);
+    assert(in);
+    while (getline(in, line)) {
+      ++dlc;
+      auto tmp = dictIn.read_sentence(line);
+      //tmp.insert(tmp.begin(),kSOS);
+      tmp.push_back(kEOS);
+      dev.push_back(tmp);
+      dtoks += dev.back().size();
+    }
+    cerr << dlc << " lines, " << dtoks << " tokens\n";
+  }
+  dlc = 0;
+  dtoks = 0;
+  cerr << "Reading dev_label data from " << params.dev_labels_file << "...\n";
+  {
+	  ifstream in(params.dev_labels_file);
+	  assert(in);
+	  while (getline(in, line)) {
+		  ++dlc;
+		  auto tmp = dictOut.read_sentence(line);
+		  //tmp.insert(tmp.begin(), kSOS);
+		  tmp.push_back(kEOS);
+		  dev_label.push_back(tmp);
+		  dtoks += dev_label.back().size();
+	  }
+	  cerr << dlc << " lines, " << dtoks << " tokens\n";
+  }
+
+  assert(dev.size() == dev_label.size());
+  for (int i = 0; i < dev.size(); i++) {
+  	  if (dev[i].size() > 50 || dev_label[i].size() > 50) continue;
+	  dev_data.push_back(pp(dev[i], dev_label[i]));
+  }
+  // Sort the dev sentences in descending order of length (for minibatching)
+  sort(dev_data.begin(), dev_data.end(), comp);
+  dev.resize(dev_data.size());
+  dev_label.resize(dev_data.size());
+  for (int i = 0; i < dev_data.size(); i++) {
+	  dev[i] = dev_data[i].first;
+	  dev_label[i] = dev_data[i].second;
+  }
+
+  // Pad the sentences in the same batch with EOS so they are the same length
+  // This modifies the dev objective a bit by making it necessary to
+  // predict EOS multiple times, but it's easy and not so harmful
+  for (int i = 0; i < dev.size(); i += params.DEV_BATCH_SIZE){
+    for (int j = 1; j < params.DEV_BATCH_SIZE && i + j < dev.size(); ++j){
+      while (dev[i + j].size() < dev[i].size())
+        dev[i + j].push_back(kEOS);
+	}
+  }
+  for (int i = 0; i < dev_label.size(); i += params.DEV_BATCH_SIZE) {
+	  size_t maxlen = dev_label[i].size();
+	  for (int j = 1; j < params.DEV_BATCH_SIZE && i + j < dev_label.size(); j++) {
+		  maxlen = max(maxlen, dev_label[i + j].size());
+	  }
+	  for (int j = 0; j < params.DEV_BATCH_SIZE && i + j < dev_label.size(); j++) {
+		  while (dev_label[i + j].size() < maxlen)
+			  dev_label[i + j].push_back(kEOS);
+	  }
+  }
+
+  fGiveMask(training, train_mask);              
+  fGiveMask(training_label, train_label_mask); 
+  fGiveMask(dev, dev_mask);
+  fGiveMask(dev_label, dev_label_mask);
+  int countSize = fCountSize(training) + fCountSize(training_label) +
+                  fCountSize(dev) + fCountSize(dev_label);
+  cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
+
+  // Model name (for saving) -----------------------------------------------------------------------
+  ostringstream os;
+  // Store a bunch of information in the model name
+  os << '_' << params.LAYERS
+     << '_' << params.INPUT_DIM
+     << '_' << params.HIDDEN_DIM ;
+     //<< ".params";
+  const string fname = os.str();
+  cerr << "Parameters : " << fname << endl;
+  cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
+  cerr << "params.DEV_BATCH_SIZE = " << params.DEV_BATCH_SIZE << endl;
+  cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
+  cerr << "params.print_freq = " << params.print_freq << endl;
+  cerr << "params.save_freq = " << params.save_freq << endl;
+
+  // Initialize model and trainer ------------------------------------------------------------------
+  Model model;
+  // Use adadelta optimizer
+  //adadelta = new AdadeltaTrainer(model, 1e-6, 0.95, 0.00);
+  AdamTrainer adadelta = AdamTrainer(model, 0.0005);
+  double slow_start = 0.998;// mid start = 0, begin = 0.998
+  //adadelta->clip_threshold *= params.BATCH_SIZE;
+  //adadelta->clip_threshold = 1.0;
+  cerr << "create optimizer success." << endl;
+
+  // Create model
+  EncoderDecoder<GRUBuilder> lm(model,
+                                 params.LAYERS,
+                                 params.INPUT_DIM,
+                                 params.HIDDEN_DIM,
+                                 params.ATTENTION_SIZE);
+  cerr << "create model success." << endl;
+
+  // Load preexisting weights (if provided)
+  if (params.model_file != "") {
+    ifstream in(params.model_file);
+    boost::archive::text_iarchive ia(in);
+    ia >> model >> lm;
+    cerr << params.model_file << " has been loaded." << endl;
+  }
+
+  // Initialize variables for training -------------------------------------------------------------
+  // Best dev score
+  //double best = 9e+99;
+
+  // Number of batches in training set
+  unsigned num_batches = training.size() / params.BATCH_SIZE;
+
+  // Number of sentences to sample each epoch (for visualization)
+  //unsigned num_samples = 5;
+
+  // Random indexing
+  unsigned si;
+  vector<unsigned> order(num_batches);
+  for (unsigned i = 0; i < num_batches; ++i) order[i] = i;
+  srand(time(0));
+
+  int epoch = 0;
+  int cnt_batches = 1;
+  // Initialize loss and number of chars(/word) (for loss per char/word)
+  	double loss = 0;
+  	double sum_loss = 0;
+  	unsigned chars = 0;
+  // Start timer
+    Timer* iteration = new Timer("completed in");
+  // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
+  while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
+    // Update the optimizer
+    if (epoch > 0) adadelta.update_epoch();
+    // Reshuffle the dataset
+    cerr << endl << "start training epoch " << epoch << endl;
+    random_shuffle(order.begin(), order.end());
+        
+    for (si = 0; si < num_batches; ++si, ++cnt_batches) {
+      // train a batch
+      if (true) {
+        // build graph for this instance
+        ComputationGraph cg;
+        // Compute batch start id and size
+        int id = order[si] * params.BATCH_SIZE;
+        //cerr << "src sent len = " << training[id].size() << ", tgt sent len = " << training_label[id].size() << endl;
+        unsigned bsize = std::min((unsigned)training.size() - id, params.BATCH_SIZE);
+        // Encode the batch
+        vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, chars, cg);
+        // Decode and get error (negative log likelihood)
+        Expression loss_expr = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
+        // Get scalar error for monitoring
+        double loss_this_time = as_scalar(cg.forward(loss_expr));
+        loss += loss_this_time;
+        sum_loss += loss_this_time;
+        // Compute gradient with backward pass
+        cg.backward(loss_expr);
+        // Update parameters
+        adadelta.eta = 0.0005 * (1 - slow_start);
+        adadelta.update();
+        slow_start *= 0.998;
+        // print info
+        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
+        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+      }
+      // Print progress every (print_freq) batches
+      if (cnt_batches % params.print_freq == 0) {
+        // Print informations
+        cerr << endl;
+        adadelta.status();
+        cerr << " loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
+        // Reinitialize timer
+        delete iteration;
+        iteration = new Timer("completed in");
+        // Reinitialize loss
+        loss = 0;
+      }
+      // save & valid ---------------------------
+      if (cnt_batches % params.save_freq == 0){
+        double dloss = 0;
+        unsigned dchars = 0;
+        for (unsigned i = 0; i < dev.size() / params.DEV_BATCH_SIZE; ++i) {
+          // build graph for this instance
+          ComputationGraph cg;
+          // Compute batch start id and size
+          unsigned id = i * params.DEV_BATCH_SIZE;
+          unsigned bsize = std::min((unsigned)dev.size() - id, params.DEV_BATCH_SIZE);
+          // Encode
+          vector<Expression> encoding = lm.encode( dev, dev_mask, id, bsize, dchars, cg);
+          // Decode and get loss
+          Expression loss_expr = lm.decode(encoding, dev_label, dev_label_mask, id, bsize, cg);
+          // Count loss
+          dloss += as_scalar(cg.forward(loss_expr));
+        }
+        // no matter how , save each model
+        stringstream ss;
+        ss << params.exp_name \
+           << "_" << (cnt_batches/params.save_freq) \
+           << fname \
+           << "_tloss=" << sum_loss * params.BATCH_SIZE / params.save_freq \
+           << "_dloss=" << dloss/(dev.size() / params.DEV_BATCH_SIZE) \
+           << ".params";
+        ofstream out(ss.str());
+        boost::archive::text_oarchive oa(out);
+        oa << model << lm;
+        // Reinitialize sum_loss
+        sum_loss = 0;
+        // If the validation loss is the lowest, save the parameters
+        /*
+        if (dloss < best) {
+          best = dloss;
+          ofstream out(fname);
+          boost::archive::text_oarchive oa(out);
+          oa << model << lm;
+        }//*/
+        // Print informations
+        /*
+        cerr << "***DEV [epoch=" << (epoch)
+             << "] E = " << (dloss / dchars)
+             << " ppl=" << exp(dloss / dchars) << ' ';
+        // Reinitialize timer
+        delete iteration;
+        iteration = new Timer("completed in");//*/
+      }
+    }
+    cerr << endl << "end training an epoch" << endl << endl;
+
+    // Sample some examples because it's cool (also helps debugging)
+    /*
+    if (si == num_batches) {
+      cout << "---------------------------------------------" << endl;
+      for (unsigned i = 0; i < num_samples; ++i) {
+        // Select a random sentence from the dev set
+        float p = (float)rand() / (float) RAND_MAX;
+        unsigned idx = (unsigned)(p * dev.size()) % dev.size();
+        auto sent = dev[idx];
+        ComputationGraph cg;
+        // Sample sentence
+        vector<int> sampled = lm.generate(sent, cg);
+        // Print original sentence
+        cout << "Original sentence : ";
+        for (int word : sent) {
+          cout << dictIn.convert(word) << " ";
+        }
+        cout << endl;
+        // Print sampled sentence
+        cout << "Sampled sentence : ";
+        for (int word : sampled) {
+          cout << dictOut.convert(word) << " ";
+        }
+        cout << endl;
+        cout << "---------------------------------------------" << endl;
+      }
+    }//*/
+
+    // Increment epoch
+    ++epoch;
+  }
+  // Free memory
+  //delete adadelta;
+  delete iteration;
+}
+
