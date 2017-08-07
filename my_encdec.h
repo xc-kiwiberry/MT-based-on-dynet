@@ -1,12 +1,3 @@
-/**
- * \file encdec.h
- * \defgroup seq2seqbuilders seq2seqbuilders
- * \brief Sequence to sequence models
- * 
- * An example implementation of a simple sequence to sequence model based on lstm encoder/decoder
- *
- */
-
 #include "dynet/nodes.h"
 #include "dynet/dynet.h"
 #include "dynet/training.h"
@@ -74,24 +65,9 @@ private:
     Parameter p_emb2voc;
     Parameter p_b_voc;
 public:
-    /**
-     * \brief Default builder
-     */
+
     EncoderDecoder() {}
 
-    /**
-     * \brief Creates an EncoderDecoder
-     *
-     * \param model Model holding the parameters
-     * \param num_layers Number of layers (same in the ecoder and decoder)
-     * \param input_dim Dimension of the word/char embeddings
-     * \param hidden_dim Dimension of the hidden states
-     * \param bwd Set to `true` to make the encoder bidirectional. This doubles the number
-     * of parameters in the encoder. This will also add parameters for an affine transformation
-     * from the bidirectional encodings (of size num_layers * 2 * hidden_dim) to encodings
-     * of size num_layers * hidden_dim compatible with the decoder
-     *
-     */
     explicit EncoderDecoder(Model& model,
                             unsigned num_layers,
                             unsigned input_dim,
@@ -123,15 +99,7 @@ public:
     }
 
     /**
-     * \brief Batched encoding
-     * \details Encodes a batch of sentences of the same size (don't forget to pad them)
-     *
-     * \param isents Whole dataset
-     * \param id Index of the start of the batch
-     * \param bsize Batch size
-     * \param chars Number of tokens processed (used to compute loss per characters)
-     * \param cg Computation graph
-     * \return Returns the expression for the negative (batched) encoding
+     * Batched encoding
      */
     vector<Expression> encode(const vector<vector<int>>& isents,
                       const vector<vector<float>>& x_mask,
@@ -162,28 +130,14 @@ public:
         fwd_enc_builder.start_new_sequence();
 
         vector<Expression> fwd_vectors; // fwd_vectors[i] -> (hidden_dim,1)
-        //Expression last_h = input(cg, Dim({HIDDEN_DIM}, bsize), vector<float>(HIDDEN_DIM * bsize));
+        
         // Run the forward encoder on the batch
         for (int t = 0; t < islen; ++t) {
-            // Fill x_t with the characters at step t in the batch
-            //vector<unsigned> id;
-            //for (int i = 0; i < bsize; ++i) {
-                //id.push_back(t * bsize + i);
-                //x_t[i] = isents[id + i][t];
-                //x_m[i] = x_mask[id + i][t];
-                //if (x_t[i] != *isents[id].rbegin()) chars++; // if x_t is non-EOS, count a char
-            //}
-            //Expression mask = input(cg, Dim({1}, bsize), x_m);
-            // Get embedding
-            //Expression i_x_t = pick_batch_elems(emb_x, id);
-            // Run a step in the forward encoder
+
             Expression i_back = fwd_enc_builder.add_input(i_x_t[t]);
-            // broadcast is available
-            //Expression now_h = cmult(fwd_enc_builder.back(), mask) + cmult(last_h, (1-mask));
-            //fwd_enc_builder.set_h(fwd_enc_builder.state(), vector<Expression>(1, now_h));
-            //fwd_vectors.push_back(now_h);
+
             fwd_vectors.push_back(i_back);
-            //last_h = now_h;
+
         }
 
         // Backward encoder ------------------------------------------------------------------------
@@ -195,40 +149,22 @@ public:
 
         vector<Expression> bwd_vectors;
         Expression last_h = zeroes(cg, Dim({HIDDEN_DIM}, bsize));
-        // Fill x_t with the characters at step t in the batch (in reverse order)
+        
         for (int t = islen - 1; t >= 0; --t) {
-            //vector<unsigned> id;
-            //for (int i = 0; i < bsize; ++i) {
-                //id.push_back(t * bsize + i);
-                //x_m[i] = x_mask[id + i][t];
-            //}
-            //Expression mask = input(cg, Dim({1}, bsize), x_m);
-            // Get embedding (could be mutualized with fwd_enc_builder)
-            //Expression i_x_t = pick_batch_elems(emb_x, id);
-            // Run a step in the forward encoder
+
             Expression i_back = bwd_enc_builder.add_input(i_x_t[t]);
-            // broadcast is available
+
             Expression now_h = cmult(i_back, mask[t]) + cmult(last_h, (1-mask[t]));
-            //rev_enc_builder.set_h(rev_enc_builder.state(), vector<Expression>(1, now_h));
+            
             bwd_vectors.push_back(now_h);
-            //bwd_vectors.push_back(i_back);
+            
             last_h = now_h;
         }
 
         // Collect encodings -----------------------------------------------------------------------
         reverse(bwd_vectors.begin(), bwd_vectors.end()); ///!!!!don't forget
         Expression init = bwd_vectors[0];
-        //Expression fwd_encoded = concatenate_cols(fwd_vectors);
-        //Expression bwd_encoded = concatenate_cols(bwd_vectors);
-        //Expression encoded = concatenate({fwd_encoded, bwd_encoded}); // encoded -> (2*hidden_dim,|F|)
-
-        //vector<float> x_m;
-        //for (int i = 0; i < bsize; ++i){
-        //    for (int t = 0; t < islen; ++t) {
-        //        x_m.push_back(x_mask[id + i][t]);
-        //    }
-        //}
-        //Expression mask = input(cg, Dim({islen, 1}, bsize), x_m);
+        
         vector<Expression> encoded;
         for (int t = 0; t < islen; ++t) {
             encoded.push_back(cmult(concatenate( { fwd_vectors[t], bwd_vectors[t] }), mask[t]));    //bi-lstm encoding
@@ -275,10 +211,8 @@ public:
         Expression b_hid = parameter(cg, p_b_hid);
 
         vector<Expression> init;
-        //Expression new_init = pickrange(encoded[0], HIDDEN_DIM, HIDDEN_DIM*2); // GRU
         init.push_back( tanh(affine_transform({b_hid, hid2hid, encoded[0]})) ); 
-        //init.push_back( hid2hid*new_init); 
-
+        
         dec_builder.new_graph(cg);
         dec_builder.start_new_sequence(init);
 
@@ -294,20 +228,13 @@ public:
         Expression w1dt = w1 * input_mat; // (att,|F|)
 
         Expression last_output_embeddings = zeroes(cg, Dim({INPUT_DIM}, bsize));
-        //input(cg, Dim({INPUT_DIM}, bsize), vector<float>(INPUT_DIM * bsize));
-        //Expression last_output_embeddings = lookup(cg, p_c, vector<unsigned>(bsize, kSOS));
-        //vector<float> y_values(HIDDEN_DIM * 2 * bsize);
-        //dec_builder.add_input(concatenate( { input(cg, Dim({ HIDDEN_DIM * 2 }, bsize), y_values), last_output_embeddings }));
-    
+        
         const unsigned oslen = osents[id].size();
 
         vector<unsigned> next_y_t(bsize);
         vector<unsigned> y_t;
         vector<float> y_m;
         vector<Expression> concat_vector(oslen);
-        //vector<Expression> i_y_t(oslen);
-        //vector<Expression> errs;
-        //Expression last_h = input(cg, Dim({HIDDEN_DIM}, bsize), vector<float>(HIDDEN_DIM * bsize));
         
         // Run on output sentence
         for (int t = 0; t < oslen; ++t) {
@@ -351,7 +278,6 @@ public:
         Expression mask = input(cg, Dim({1}, bsize * oslen), y_m);
 
         // Sum loss over batch
-        //return sum_batches(sum(errs))/(float)bsize;
         return sum_batches(cmult(i_err, mask))/(float)bsize;
     }
   
@@ -371,26 +297,13 @@ public:
         return id;
     }
     /**
-     * \brief Generate a sentence from an input sentence
-     * \details Samples at each timestep ducring decoding. Possible variations are greedy decoding
-     * and beam search for better performance
-     * 
-     * \param insent Input sentence
-     * \param cg Computation Graph
-     * 
-     * \return Generated sentence (indices in the dictionary)
+     * Generate a sentence from an input sentence
      */
     vector<unsigned> generate(const vector<int>& insent, int& miss, ComputationGraph & cg) {
         return generate(encode(insent, cg), 3 * insent.size() - 1, miss, cg);
     }
     /**
-     * @brief Generate a sentence from an encoding
-     * @details You can use this directly to generate random sentences
-     * 
-     * @param i_nc Input encoding
-     * @param oslen Maximum length of output
-     * @param cg Computation graph
-     * @return Generated sentence (indices in the dictionary)
+     * Generate a sentence from an encoding
      */
     vector<unsigned> generate(vector<Expression> encoded, unsigned oslen, int& miss, ComputationGraph & cg, int beam_size = 10) {
 
@@ -410,10 +323,8 @@ public:
         Expression w1 = parameter(cg, attention_w1);
         Expression w1dt = w1 * input_mat;
 
-        //Expression init1 = pickrange(encoded[0], HIDDEN_DIM, HIDDEN_DIM*2); // GRU
         Expression init = tanh(affine_transform({b_hid, hid2hid, encoded[0]})); 
-        //Expression init3 = concatenate_to_batch(vector<Expression>(beam_size, init2)); // copy beam_size times
-
+        
         // init dec_builder
         dec_builder.new_graph(cg);
         dec_builder.start_new_sequence(vector<Expression>(1, init));
@@ -428,15 +339,6 @@ public:
         vector<vector<float>> sum_loss;
         vector<vector<unsigned>> result;
         vector<vector<unsigned>> fa;
-        //for (auto &sent : result) sent.push_back(kSOS);
-        //vector<RNNPointer> pGen_builder(beam_size);
-        //for (auto &p : pGen_builder) p = dec_builder.state();
-
-
-        // temp var
-        //vector<float> tmp_pre_loss(beam_size);
-        //vector<vector<int>> tmp_result(beam_size);
-        //vector<RNNPointer> tmp_pGen_builder(beam_size);
 
         // final var
         vector<vector<unsigned>> final_result;
