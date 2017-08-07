@@ -1,9 +1,4 @@
-/**
- * Train a vanilla encoder decoder lstm network with minibatching
- * to perform auto-encoding.
- *
- * This provide an example of usage of the encdec.h model
- */
+
 #include "my_encdec.h"
 #include "my_cl-args.h"
 #include "my_dict.h"
@@ -27,8 +22,7 @@ int main(int argc, char** argv) {
   // Dictionary
   cerr << "Building dictionary..." << endl;
   XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
-  //kSOS = 0;
-  kEOS = 1;
+  kEOS = 0;
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;
@@ -46,7 +40,6 @@ int main(int argc, char** argv) {
     while (getline(in, line)) {
       ++tlc;
       auto tmp = dictIn.read_sentence(line);
-      //tmp.insert(tmp.begin(),kSOS);
       tmp.push_back(kEOS);
       test.push_back(tmp);
       ttoks += test.back().size();
@@ -63,7 +56,6 @@ int main(int argc, char** argv) {
     while (getline(in, line)) {
       ++tlc;
       auto tmp = dictOut.read_sentence(line);
-      //tmp.insert(tmp.begin(),kSOS);
       tmp.push_back(kEOS);
       test_label.push_back(tmp);
       ttoks += test_label.back().size();

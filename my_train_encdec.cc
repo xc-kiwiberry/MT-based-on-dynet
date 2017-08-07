@@ -75,7 +75,6 @@ int main(int argc, char** argv) {
   // Dictionary
   cerr << "Building dictionary..." << endl;
   XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
-  //kSOS = 0;
   kEOS = 0;
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
@@ -110,7 +109,6 @@ int main(int argc, char** argv) {
 	  while (getline(in, line)) {
 		  ++tlc;
 		  auto tmp = dictOut.read_sentence(line);
-		  //tmp.insert(tmp.begin(), kSOS);
 		  tmp.push_back(kEOS);
 		  training_label.push_back(tmp);
 		  ttoks += training_label.back().size();
@@ -162,7 +160,6 @@ int main(int argc, char** argv) {
     while (getline(in, line)) {
       ++dlc;
       auto tmp = dictIn.read_sentence(line);
-      //tmp.insert(tmp.begin(),kSOS);
       tmp.push_back(kEOS);
       dev.push_back(tmp);
       dtoks += dev.back().size();
@@ -178,7 +175,6 @@ int main(int argc, char** argv) {
 	  while (getline(in, line)) {
 		  ++dlc;
 		  auto tmp = dictOut.read_sentence(line);
-		  //tmp.insert(tmp.begin(), kSOS);
 		  tmp.push_back(kEOS);
 		  dev_label.push_back(tmp);
 		  dtoks += dev_label.back().size();
@@ -234,7 +230,6 @@ int main(int argc, char** argv) {
   os << '_' << params.LAYERS
      << '_' << params.INPUT_DIM
      << '_' << params.HIDDEN_DIM ;
-     //<< ".params";
   const string fname = os.str();
   cerr << "Parameters : " << fname << endl;
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
@@ -246,11 +241,9 @@ int main(int argc, char** argv) {
   // Initialize model and trainer ------------------------------------------------------------------
   Model model;
   // Use adadelta optimizer
-  //adadelta = new AdadeltaTrainer(model, 1e-6, 0.95, 0.00);
   AdamTrainer adadelta = AdamTrainer(model, 0.0005);
   double slow_start = 0.998;// mid start = 0, begin = 0.998
-  //adadelta->clip_threshold *= params.BATCH_SIZE;
-  //adadelta->clip_threshold = 1.0;
+
   cerr << "create optimizer success." << endl;
 
   // Create model
@@ -269,15 +262,8 @@ int main(int argc, char** argv) {
     cerr << params.model_file << " has been loaded." << endl;
   }
 
-  // Initialize variables for training -------------------------------------------------------------
-  // Best dev score
-  //double best = 9e+99;
-
   // Number of batches in training set
   unsigned num_batches = training.size() / params.BATCH_SIZE;
-
-  // Number of sentences to sample each epoch (for visualization)
-  //unsigned num_samples = 5;
 
   // Random indexing
   unsigned si;
@@ -370,59 +356,14 @@ int main(int argc, char** argv) {
         oa << model << lm;
         // Reinitialize sum_loss
         sum_loss = 0;
-        // If the validation loss is the lowest, save the parameters
-        /*
-        if (dloss < best) {
-          best = dloss;
-          ofstream out(fname);
-          boost::archive::text_oarchive oa(out);
-          oa << model << lm;
-        }//*/
-        // Print informations
-        /*
-        cerr << "***DEV [epoch=" << (epoch)
-             << "] E = " << (dloss / dchars)
-             << " ppl=" << exp(dloss / dchars) << ' ';
-        // Reinitialize timer
-        delete iteration;
-        iteration = new Timer("completed in");//*/
       }
     }
     cerr << endl << "end training an epoch" << endl << endl;
-
-    // Sample some examples because it's cool (also helps debugging)
-    /*
-    if (si == num_batches) {
-      cout << "---------------------------------------------" << endl;
-      for (unsigned i = 0; i < num_samples; ++i) {
-        // Select a random sentence from the dev set
-        float p = (float)rand() / (float) RAND_MAX;
-        unsigned idx = (unsigned)(p * dev.size()) % dev.size();
-        auto sent = dev[idx];
-        ComputationGraph cg;
-        // Sample sentence
-        vector<int> sampled = lm.generate(sent, cg);
-        // Print original sentence
-        cout << "Original sentence : ";
-        for (int word : sent) {
-          cout << dictIn.convert(word) << " ";
-        }
-        cout << endl;
-        // Print sampled sentence
-        cout << "Sampled sentence : ";
-        for (int word : sampled) {
-          cout << dictOut.convert(word) << " ";
-        }
-        cout << endl;
-        cout << "---------------------------------------------" << endl;
-      }
-    }//*/
 
     // Increment epoch
     ++epoch;
   }
   // Free memory
-  //delete adadelta;
   delete iteration;
 }
 
