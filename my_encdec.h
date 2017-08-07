@@ -58,7 +58,6 @@ private:
     Parameter attention_v;
 
     Parameter p_readout_allthree;
-    //Parameter p_readout_hidden;
     Parameter p_readout_offset;
 
     Parameter p_hid2emb;
@@ -90,7 +89,6 @@ public:
         attention_v = model.add_parameters( { 1, ATTENTION_SIZE });
 
         p_readout_allthree = model.add_parameters( { HIDDEN_DIM, INPUT_DIM + HIDDEN_DIM * 2 + HIDDEN_DIM });
-        //p_readout_hidden = model.add_parameters( { HIDDEN_DIM, HIDDEN_DIM });
         p_readout_offset = model.add_parameters( { HIDDEN_DIM });
 
         p_hid2emb = model.add_parameters( { INPUT_DIM, HIDDEN_DIM } );
@@ -217,7 +215,6 @@ public:
         dec_builder.start_new_sequence(init);
 
         Expression readout_allthree = parameter(cg, p_readout_allthree);
-        //Expression readout_hidden = parameter(cg, p_readout_hidden);
         Expression readout_offset = parameter(cg, p_readout_offset);
 
         Expression hid2voc = parameter(cg, p_emb2voc) * parameter(cg, p_hid2emb);
@@ -227,6 +224,7 @@ public:
         Expression w1 = parameter(cg, attention_w1);
         Expression w1dt = w1 * input_mat; // (att,|F|)
 
+        // zero embedding
         Expression last_output_embeddings = zeroes(cg, Dim({INPUT_DIM}, bsize));
         
         const unsigned oslen = osents[id].size();
@@ -234,45 +232,29 @@ public:
         vector<unsigned> next_y_t(bsize);
         vector<unsigned> y_t;
         vector<float> y_m;
-        vector<Expression> concat_vector(oslen);
+        //vector<Expression> concat_vector(oslen);
         
         // Run on output sentence
         for (int t = 0; t < oslen; ++t) {
 
             Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
             concat_vector[t] = concatenate( { context, last_output_embeddings, dec_builder.back() } );
-            // Embed token
-            //concat_vector[t] = concatenate( { attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg), last_output_embeddings }); // vector -> ( input_dim + hidden_dim * 2)
-            // Run decoder step
-            //i_y_t[t] = dec_builder.add_input(concat_vector[t]);
-            //Expression now_h = cmult(i_y_t, mask) + cmult(last_h, (1-mask));
-            //dec_builder.set_h(dec_builder.state(), vector<Expression>(1, now_h));
-            //last_h = now_h;
-            // Project from output dim to dictionary dimension
-            //Expression i_r_t = i_bias + i_R * i_y_t;
-            //Expression i_r_t = affine_transform({readout_offset, \
-                                                readout_emb_context, concat_vector, \
-                                                readout_hidden, i_y_t});
+            
             //Expression maxout = max_dim(reshape(i_r_t, Dim({HIDDEN_DIM/2, 2}, bsize)), 1);
-            //Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
-            // Retrieve input
+            // 
             for (int i = 0; i < bsize; ++i) {
                 next_y_t[i] = osents[id + i][t];
                 y_t.push_back(osents[id + i][t]);
                 y_m.push_back(y_mask[id + i][t]);
-                //y_m[i] = y_mask[id + i][t];
             }
-            //Expression mask = input(cg, Dim({1}, bsize), y_m);
-            // Compute softmax and negative log
-            //Expression i_err = pickneglogsoftmax(prob_vocab, next_y_t);
-            //errs.push_back(cmult(i_err, mask));
+            // 
             last_output_embeddings = lookup(cg, p_c, next_y_t);
             dec_builder.add_input( concatenate({ context, last_output_embeddings }) );
         }
 
         Expression i_r_t = affine_transform({readout_offset,
                                             readout_allthree, concatenate_to_batch(concat_vector)});
-                                            //readout_hidden, concatenate_to_batch(i_y_t)});
+
         Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
         Expression i_err = pickneglogsoftmax(prob_vocab, y_t);
         Expression mask = input(cg, Dim({1}, bsize * oslen), y_m);
@@ -312,7 +294,6 @@ public:
         Expression b_hid = parameter(cg, p_b_hid);
 
         Expression readout_allthree = parameter(cg, p_readout_allthree);
-        //Expression readout_hidden = parameter(cg, p_readout_hidden);
         Expression readout_offset = parameter(cg, p_readout_offset);
 
         Expression hid2voc = parameter(cg, p_emb2voc) * parameter(cg, p_hid2emb);
@@ -329,13 +310,7 @@ public:
         dec_builder.new_graph(cg);
         dec_builder.start_new_sequence(vector<Expression>(1, init));
 
-        //Expression last_output_embeddings = input(cg, {INPUT_DIM}, vector<float>(INPUT_DIM)); 
-        //Expression last_output_embeddings = lookup(cg, p_c, kSOS);
-        //vector<float> x_values(HIDDEN_DIM * 2);
-        //dec_builder.add_input(concatenate( { input(cg, { HIDDEN_DIM * 2 }, x_values), last_output_embeddings }));
-
         // var
-        //vector<vector<float>> loss(beam_size);
         vector<vector<float>> sum_loss;
         vector<vector<unsigned>> result;
         vector<vector<unsigned>> fa;
@@ -348,11 +323,9 @@ public:
 
         for (int t = 0; t < oslen; ++t) {
             Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
-            //Expression i_y_t = dec_builder.add_input(concat_vector);
             Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
             Expression i_r_t = affine_transform({readout_offset, 
                                                 readout_allthree, concat_vector});
-                                                //readout_hidden, i_y_t});
             //Expression maxout = max_dim(reshape(i_r_t, Dim({HIDDEN_DIM/2, 2})), 1);
             Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
             Expression i_ydist = log_softmax(prob_vocab);
