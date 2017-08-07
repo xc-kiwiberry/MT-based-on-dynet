@@ -232,7 +232,7 @@ public:
         vector<unsigned> next_y_t(bsize);
         vector<unsigned> y_t;
         vector<float> y_m;
-        //vector<Expression> concat_vector(oslen);
+        vector<Expression> concat_vector(oslen);
         
         // Run on output sentence
         for (int t = 0; t < oslen; ++t) {

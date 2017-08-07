@@ -36,7 +36,6 @@ struct Params {
   unsigned HIDDEN_DIM = 4;
   unsigned ATTENTION_SIZE = 32;
   unsigned BATCH_SIZE = 1;
-  unsigned DEV_BATCH_SIZE = 1;
   unsigned print_freq = 1000;
   unsigned save_freq = 10000;
   int NUM_EPOCHS = -1;
@@ -162,7 +161,6 @@ void get_args(int argc,
       }
       istringstream d(argv[i + 1]);
       d >> params.BATCH_SIZE;
-      params.DEV_BATCH_SIZE = params.BATCH_SIZE; // DEV_BATCH_SIZE = BATCH_SIZE;
       i++;
     } else if (arg == "--num_epochs" || arg == "-N") {
       if (i + 1 == argc) {

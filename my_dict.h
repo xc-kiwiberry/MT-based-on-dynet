@@ -8,6 +8,7 @@
 
 using namespace std;
 
+
 namespace XC {
 
 class Dict {
@@ -90,4 +91,24 @@ public:
 };
 
 }
+
+
+void read_corpus(const string &fileName, const string varName, XC::Dict &dict, vector<vector<int>>& vec){
+  string line;
+  int line_cnt = 0;
+  int token_cnt = 0;
+  cerr << "Reading " << varName << " " << " data from " << fileName << "..." << endl;
+  ifstream in(fileName);
+  assert(in); 
+  while (getline(in, line)) {
+    ++line_cnt;
+    auto tmp = dict.read_sentence(line);
+    tmp.push_back(kEOS);
+    vec.push_back(tmp);
+    token_cnt += vec.back().size();
+  }
+  cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
+}
+
+
 #endif

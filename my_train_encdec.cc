@@ -37,11 +37,10 @@ void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
 }
 
 // Datasets
-  vector<pp> train_data, dev_data;
-  vector<vector<int>> training, dev;
-  vector<vector<int>> training_label, dev_label;
-  vector<vector<float>> train_mask, dev_mask,
-                        train_label_mask, dev_label_mask;
+  vector<pp> train_data;
+  vector<vector<int>> training, training_label;
+  vector<vector<float>> train_mask, train_label_mask;
+  vector<vector<int>> dev;
 
 void debug(const vector<float>& v) {
   for (auto aa: v) cerr << aa << " ";
@@ -82,45 +81,17 @@ int main(int argc, char** argv) {
   cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
   cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
 
-  // Read training data and fill dictionary
-  string line;
-  int tlc = 0;
-  int ttoks = 0;
-  cerr << "Reading training data from " << params.train_file << "...\n";
-  {
-    ifstream in(params.train_file);
-    assert(in);
-    while (getline(in, line)) {
-      ++tlc;
-      auto tmp = dictIn.read_sentence(line);
-      //tmp.insert(tmp.begin(),kSOS);
-      tmp.push_back(kEOS);
-      training.push_back(tmp);
-      ttoks += training.back().size();
-    }
-    cerr << tlc << " lines, " << ttoks << " tokens\n";
-  }
-  tlc = 0;
-  ttoks = 0;
-  cerr << "Reading training_label data from " << params.train_labels_file << "...\n";
-  {
-	  ifstream in(params.train_labels_file);
-	  assert(in);
-	  while (getline(in, line)) {
-		  ++tlc;
-		  auto tmp = dictOut.read_sentence(line);
-		  tmp.push_back(kEOS);
-		  training_label.push_back(tmp);
-		  ttoks += training_label.back().size();
-	  }
-	  cerr << tlc << " lines, " << ttoks << " tokens\n";
-  }
+  // Read training data
+  read_corpus(params.train_file, "training", dictIn, training);
+  read_corpus(params.train_labels_file, "training_label", dictOut, training_label);
 
   assert(training.size() == training_label.size());
+
   for (int i = 0; i < training.size(); i++) {
   	  if (training[i].size() > 50 || training_label[i].size() > 50) continue;
 	  train_data.push_back(pp(training[i], training_label[i]));
   }
+
   // Sort the training sentences in descending order of length (for minibatching)
   sort(train_data.begin(), train_data.end(), comp);
   training.resize(train_data.size());
@@ -151,77 +122,11 @@ int main(int argc, char** argv) {
   }
   
   // Read validation dataset
-  int dlc = 0;
-  int dtoks = 0;
-  cerr << "Reading dev data from " << params.dev_file << "...\n";
-  {
-    ifstream in(params.dev_file);
-    assert(in);
-    while (getline(in, line)) {
-      ++dlc;
-      auto tmp = dictIn.read_sentence(line);
-      tmp.push_back(kEOS);
-      dev.push_back(tmp);
-      dtoks += dev.back().size();
-    }
-    cerr << dlc << " lines, " << dtoks << " tokens\n";
-  }
-  dlc = 0;
-  dtoks = 0;
-  cerr << "Reading dev_label data from " << params.dev_labels_file << "...\n";
-  {
-	  ifstream in(params.dev_labels_file);
-	  assert(in);
-	  while (getline(in, line)) {
-		  ++dlc;
-		  auto tmp = dictOut.read_sentence(line);
-		  tmp.push_back(kEOS);
-		  dev_label.push_back(tmp);
-		  dtoks += dev_label.back().size();
-	  }
-	  cerr << dlc << " lines, " << dtoks << " tokens\n";
-  }
-
-  assert(dev.size() == dev_label.size());
-  for (int i = 0; i < dev.size(); i++) {
-  	  if (dev[i].size() > 50 || dev_label[i].size() > 50) continue;
-	  dev_data.push_back(pp(dev[i], dev_label[i]));
-  }
-  // Sort the dev sentences in descending order of length (for minibatching)
-  sort(dev_data.begin(), dev_data.end(), comp);
-  dev.resize(dev_data.size());
-  dev_label.resize(dev_data.size());
-  for (int i = 0; i < dev_data.size(); i++) {
-	  dev[i] = dev_data[i].first;
-	  dev_label[i] = dev_data[i].second;
-  }
-
-  // Pad the sentences in the same batch with EOS so they are the same length
-  // This modifies the dev objective a bit by making it necessary to
-  // predict EOS multiple times, but it's easy and not so harmful
-  for (int i = 0; i < dev.size(); i += params.DEV_BATCH_SIZE){
-    for (int j = 1; j < params.DEV_BATCH_SIZE && i + j < dev.size(); ++j){
-      while (dev[i + j].size() < dev[i].size())
-        dev[i + j].push_back(kEOS);
-	}
-  }
-  for (int i = 0; i < dev_label.size(); i += params.DEV_BATCH_SIZE) {
-	  size_t maxlen = dev_label[i].size();
-	  for (int j = 1; j < params.DEV_BATCH_SIZE && i + j < dev_label.size(); j++) {
-		  maxlen = max(maxlen, dev_label[i + j].size());
-	  }
-	  for (int j = 0; j < params.DEV_BATCH_SIZE && i + j < dev_label.size(); j++) {
-		  while (dev_label[i + j].size() < maxlen)
-			  dev_label[i + j].push_back(kEOS);
-	  }
-  }
+  read_corpus(params.dev_file, "dev", dictIn, dev);
 
   fGiveMask(training, train_mask);              
   fGiveMask(training_label, train_label_mask); 
-  fGiveMask(dev, dev_mask);
-  fGiveMask(dev_label, dev_label_mask);
-  int countSize = fCountSize(training) + fCountSize(training_label) +
-                  fCountSize(dev) + fCountSize(dev_label);
+  int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
 
   // Model name (for saving) -----------------------------------------------------------------------
@@ -233,7 +138,6 @@ int main(int argc, char** argv) {
   const string fname = os.str();
   cerr << "Parameters : " << fname << endl;
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
-  cerr << "params.DEV_BATCH_SIZE = " << params.DEV_BATCH_SIZE << endl;
   cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
@@ -326,30 +230,33 @@ int main(int argc, char** argv) {
         // Reinitialize loss
         loss = 0;
       }
-      // save & valid ---------------------------
+      // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
-        double dloss = 0;
-        unsigned dchars = 0;
-        for (unsigned i = 0; i < dev.size() / params.DEV_BATCH_SIZE; ++i) {
-          // build graph for this instance
+        ostringstream dev_out_ss;
+        dev_out_ss << "dev_" << cnt_batches/params.save_freq << ".out";
+        ofstream fout(dev_out_ss.str());
+        int miss = 0;
+        for (int i = 0; i < dev.size(); i++) {
           ComputationGraph cg;
-          // Compute batch start id and size
-          unsigned id = i * params.DEV_BATCH_SIZE;
-          unsigned bsize = std::min((unsigned)dev.size() - id, params.DEV_BATCH_SIZE);
-          // Encode
-          vector<Expression> encoding = lm.encode( dev, dev_mask, id, bsize, dchars, cg);
-          // Decode and get loss
-          Expression loss_expr = lm.decode(encoding, dev_label, dev_label_mask, id, bsize, cg);
-          // Count loss
-          dloss += as_scalar(cg.forward(loss_expr));
+          vector<unsigned> res = lm.generate(dev[i], miss, cg);
+          for (int j = 0; j < res.size()-1 ; ++j) 
+            fout << dictOut.convert(res[j]) << " ";
+          fout << endl;
         }
+        // multi-bleu
+        string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl " + 
+               params.dev_labels_file + " < " + dev_out_ss.str() + " > " + "tmp_bleu.res";
+        system(cmd.c_str());
+        // 读取bleu值
+        ///???----------------
+
         // no matter how , save each model
-        stringstream ss;
+        ostringstream ss;
         ss << params.exp_name \
            << "_" << (cnt_batches/params.save_freq) \
            << fname \
            << "_tloss=" << sum_loss * params.BATCH_SIZE / params.save_freq \
-           << "_dloss=" << dloss/(dev.size() / params.DEV_BATCH_SIZE) \
+           << "_bleu=" << bleu`~~~~~
            << ".params";
         ofstream out(ss.str());
         boost::archive::text_oarchive oa(out);

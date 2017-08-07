@@ -30,38 +30,9 @@ int main(int argc, char** argv) {
   cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
 
   // Load datasets ---------------------------------------------------------------------------------
-  string line;
-  {
-    int tlc = 0;
-    int ttoks = 0;
-    cerr << "Reading test data from " << params.test_file << "...\n";
-    ifstream in(params.test_file);
-    assert(in); 
-    while (getline(in, line)) {
-      ++tlc;
-      auto tmp = dictIn.read_sentence(line);
-      tmp.push_back(kEOS);
-      test.push_back(tmp);
-      ttoks += test.back().size();
-    }
-    cerr << tlc << " lines, " << ttoks << " tokens" << endl;
-  }
-
-  {
-    int tlc = 0;
-    int ttoks = 0;
-    cerr << "Reading test_label data from " << params.test_labels_file << "...\n";
-    ifstream in(params.test_labels_file);
-    assert(in); 
-    while (getline(in, line)) {
-      ++tlc;
-      auto tmp = dictOut.read_sentence(line);
-      tmp.push_back(kEOS);
-      test_label.push_back(tmp);
-      ttoks += test_label.back().size();
-    }
-    cerr << tlc << " lines, " << ttoks << " tokens" << endl;
-  }
+  
+  read_corpus(params.test_file, "test", dictIn, test);
+  read_corpus(params.test_labels_file, "test_label", dictOut, test_label);
 
   assert(test.size() == test_label.size());
 
