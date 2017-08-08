@@ -26,9 +26,7 @@ using namespace std;
 using namespace dynet;
 using namespace dynet::expr;
 
-//int kSOS;
 int kEOS;
-
 
 unsigned SRC_VOCAB_SIZE; // depends on dict
 unsigned TGT_VOCAB_SIZE; // depends on dict
@@ -267,11 +265,11 @@ public:
      * find first b smallest element
      */
     vector<pair<int,int>> find_beam_min(const vector<float> &loss, const int &beam_size){
-        vector<pair<float,int>> tmp;
+        vector< pair<float,int> > tmp;
         for (unsigned i = 0; i < loss.size(); ++i)
             tmp.push_back( pair<float,int>( loss[i], i ) );
         nth_element(tmp.begin(), tmp.begin() + beam_size, tmp.end());
-        vector<pair<int,int>> id;
+        vector< pair<int,int> > id;
         for (unsigned i = 0; i < beam_size; i++){
             int tid = tmp[i].second;
             id.push_back( pair<int,int>( tid/TGT_VOCAB_SIZE, tid%TGT_VOCAB_SIZE ) );

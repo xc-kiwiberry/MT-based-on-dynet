@@ -1,9 +1,4 @@
-/**
- * Train a vanilla encoder decoder lstm network with minibatching
- * to perform auto-encoding.
- *
- * This provide an example of usage of the encdec.h model
- */
+
 #include "my_encdec.h"
 #include "my_cl-args.h"
 #include "my_dict.h"
@@ -129,16 +124,6 @@ int main(int argc, char** argv) {
   int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
 
-  // params -----------------------------------------------------------------------
-
-  cerr << "params.LAYERS = " << params.LAYERS << endl;
-  cerr << "params.INPUT_DIM = " << params.INPUT_DIM << endl;
-  cerr << "params.HIDDEN_DIM = " << params.HIDDEN_DIM << endl;
-  cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
-  cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
-  cerr << "params.print_freq = " << params.print_freq << endl;
-  cerr << "params.save_freq = " << params.save_freq << endl;
-
   // Initialize model and trainer ------------------------------------------------------------------
   Model model;
   // Use adadelta optimizer
@@ -162,6 +147,16 @@ int main(int argc, char** argv) {
     ia >> model >> lm;
     cerr << params.model_file << " has been loaded." << endl;
   }
+
+  // Params -----------------------------------------------------------------------
+
+  cerr << "params.LAYERS = " << params.LAYERS << endl;
+  cerr << "params.INPUT_DIM = " << params.INPUT_DIM << endl;
+  cerr << "params.HIDDEN_DIM = " << params.HIDDEN_DIM << endl;
+  cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
+  cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
+  cerr << "params.print_freq = " << params.print_freq << endl;
+  cerr << "params.save_freq = " << params.save_freq << endl;
 
   // Number of batches in training set
   unsigned num_batches = training.size() / params.BATCH_SIZE;

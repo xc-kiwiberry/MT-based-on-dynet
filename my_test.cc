@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   // Load datasets ---------------------------------------------------------------------------------
   
   read_corpus(params.test_file, "test", dictIn, test);
-  read_corpus(params.test_labels_file, "test_label", dictOut, test_label);
+  read_corpus(params.test_labels_file + "0", "test_label", dictOut, test_label);
 
   assert(test.size() == test_label.size());
 
@@ -91,9 +91,10 @@ int main(int argc, char** argv) {
   }
   cerr << "translation finished. " << miss << " sents can't translate in beam_size 10." << endl;
 
-  string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl \
-               ~/data_set/dev_test/nist06/nist06.en < " + os.str();
+  string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl " +
+                params.test_labels_file + " < " + os.str();
   system(cmd.c_str());
+  
   return 0;
 }
 
