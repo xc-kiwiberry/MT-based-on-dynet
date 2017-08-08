@@ -1,34 +1,31 @@
-/**
- * \file cl-args.h
- * \brief This is a **very** minimal command line argument parser
- */
+
 #include <iostream>
 #include <stdlib.h>
 #include <string>
 #include <sstream>
 
-/**
- * Values used to specify the task at hand, and incidentally the required command line arguments
- */
 enum Task {
   TRAIN, 
   TEST 
 };
 
 /**
- * \brief Structure holding any possible command line argument
- *
+ *  Structure holding any possible command line argument
  */
 struct Params {
   string exp_name = "mt";
+
   string train_file = "";
-  string dev_file = "";
   string train_labels_file = "";
+
+  string dev_file = "";
   string dev_labels_file = "";
-  string model_file = "";
-  string dic_file = "";
+
   string test_file = "";
   string test_labels_file = "";
+
+  string model_file = "";
+  string dic_file = "";
 
   // default Hyperparameters
   unsigned LAYERS = 1;

@@ -97,7 +97,7 @@ void read_corpus(const string &fileName, const string varName, XC::Dict &dict, v
   string line;
   int line_cnt = 0;
   int token_cnt = 0;
-  cerr << "Reading " << varName << " " << " data from " << fileName << "..." << endl;
+  cerr << "Reading " << varName << " data from " << fileName << "..." << endl;
   ifstream in(fileName);
   assert(in); 
   while (getline(in, line)) {

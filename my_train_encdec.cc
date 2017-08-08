@@ -129,14 +129,11 @@ int main(int argc, char** argv) {
   int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
 
-  // Model name (for saving) -----------------------------------------------------------------------
-  ostringstream os;
-  // Store a bunch of information in the model name
-  os << '_' << params.LAYERS
-     << '_' << params.INPUT_DIM
-     << '_' << params.HIDDEN_DIM ;
-  const string fname = os.str();
-  cerr << "Parameters : " << fname << endl;
+  // params -----------------------------------------------------------------------
+
+  cerr << "params.LAYERS = " << params.LAYERS << endl;
+  cerr << "params.INPUT_DIM = " << params.INPUT_DIM << endl;
+  cerr << "params.HIDDEN_DIM = " << params.HIDDEN_DIM << endl;
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
   cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
@@ -170,10 +167,10 @@ int main(int argc, char** argv) {
   unsigned num_batches = training.size() / params.BATCH_SIZE;
 
   // Random indexing
-  unsigned si;
   vector<unsigned> order(num_batches);
   for (unsigned i = 0; i < num_batches; ++i) order[i] = i;
   srand(time(0));
+  random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
   int epoch = 0;
   int cnt_batches = 1;
@@ -187,11 +184,9 @@ int main(int argc, char** argv) {
   while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
     // Update the optimizer
     if (epoch > 0) adadelta.update_epoch();
-    // Reshuffle the dataset
     cerr << endl << "start training epoch " << epoch << endl;
-    random_shuffle(order.begin(), order.end());
-        
-    for (si = 0; si < num_batches; ++si, ++cnt_batches) {
+    
+    for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
       if (true) {
         // build graph for this instance
@@ -232,6 +227,7 @@ int main(int argc, char** argv) {
       }
       // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
+        // translation
         ostringstream dev_out_ss;
         dev_out_ss << "dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
@@ -247,18 +243,24 @@ int main(int argc, char** argv) {
         string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl " + 
                params.dev_labels_file + " < " + dev_out_ss.str() + " > " + "tmp_bleu.res";
         system(cmd.c_str());
-        // 读取bleu值
-        ///???----------------
-
-        // no matter how , save each model
-        ostringstream ss;
-        ss << params.exp_name \
-           << "_" << (cnt_batches/params.save_freq) \
-           << fname \
-           << "_tloss=" << sum_loss * params.BATCH_SIZE / params.save_freq \
-           << "_bleu=" << bleu`~~~~~
-           << ".params";
-        ofstream out(ss.str());
+        // readin bleu score
+        ifstream fin("tmp_bleu.res");
+        assert(fin);
+        string bleu_str = "";
+        getline(fin, bleu_str);
+        assert(bleu_str != "");
+        // save each model
+        ostringstream model_out_ss;
+        model_out_ss 
+            << params.exp_name 
+            << "_" << (cnt_batches/params.save_freq) 
+            << '_' << params.LAYERS
+            << '_' << params.INPUT_DIM
+            << '_' << params.HIDDEN_DIM 
+            << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
+            << "_" << bleu_str
+            << ".params";
+        ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
         // Reinitialize sum_loss
