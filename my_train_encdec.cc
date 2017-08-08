@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
             << '_' << params.INPUT_DIM
             << '_' << params.HIDDEN_DIM 
             << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
-            << "_" << bleu_str
+            << "_" << bleu_str.sub_str(0, 10)
             << ".params";
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
