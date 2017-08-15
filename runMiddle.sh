@@ -7,5 +7,5 @@
  -d ~/data_set/dev_test/nist06/nist06.zh \
  -dl ~/data_set/dev_test/nist06/nist06.en \
  --input_size 62  --hidden_size 100  --batch_size 80 \
- --num_layers 1  --num_epochs -1
- --save_freq 100 --print_freq 50 \ 
+ --num_layers 1  --num_epochs -1 \
+ --save_freq 10 --print_freq 5 \ 
