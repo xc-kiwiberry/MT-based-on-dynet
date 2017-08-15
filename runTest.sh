@@ -6,5 +6,5 @@
  -t ~/data_set/train/train.zh \
  -tl ~/data_set/train/train.en \
  -ts ~/data_set/dev_test/nist06/nist06.zh \
- -tsl ~/data_set/dev_test/nist06/nist06.en0 \
+ -tsl ~/data_set/dev_test/nist06/nist06.en \
  --input_size 620 --hidden_size 1000 --num_layers 1 \
