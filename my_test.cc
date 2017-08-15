@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   }
   cerr << "translation finished. " << miss << " sents can't translate in beam_size 10." << endl;
 
-  string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl " +
+  string cmd = "perl multi-bleu.perl " +
                 params.test_labels_file + " < " + os.str();
   system(cmd.c_str());
   

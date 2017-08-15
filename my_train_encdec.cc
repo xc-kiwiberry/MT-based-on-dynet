@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
         }
         // multi-bleu
         const string bleu_res = "tmp_bleu.res";
-        string cmd = "perl ~/projects/dynet/examples/cpp/encdec/multi-bleu.perl " + 
+        string cmd = "perl multi-bleu.perl " + 
                params.dev_labels_file + " < " + dev_out_ss.str() + " > " + bleu_res;
         system(cmd.c_str());
         // readin bleu score
