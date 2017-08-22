@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
       }
       // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
-        cerr << endl << "start validation..." << endl;
+        cerr << "start validation..." << endl;
         // translation
         ostringstream dev_out_ss;
         mkdir("valid", 755);
@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
-        cerr << "save model: " << model_out_ss.str() << " success." << endl;
+        cerr << "save model: " << model_out_ss.str() << " success." << endl << endl;
         // Reinitialize sum_loss
         sum_loss = 0;
       }
