@@ -186,7 +186,7 @@ int main(int argc, char** argv) {
   	unsigned chars = 0;
   // Start timer
     Timer* iteration = new Timer("completed in");
-    cerr << "start training" << endl;
+    cerr << endl << "start training" << endl;
   // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
   while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
     // Update the optimizer
