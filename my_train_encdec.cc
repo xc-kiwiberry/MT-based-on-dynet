@@ -259,6 +259,7 @@ int main(int argc, char** argv) {
         assert(bleu_str != "");
         cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
+        system("mkdir models");
         ostringstream model_out_ss;
         model_out_ss 
             << "models/"
