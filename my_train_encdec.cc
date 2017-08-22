@@ -258,13 +258,14 @@ int main(int argc, char** argv) {
         getline(fin, bleu_str);
         assert(bleu_str != "");
         cerr << "bleu_str : " << bleu_str << endl;
+        cerr << "sub_bleu_str : " << bleu_str.substr(7, 12) << endl;
         for (auto tt : bleu_str) cerr << tt << endl;
         cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
         system("mkdir models");
         ostringstream model_out_ss;
         model_out_ss 
-            << "models/"
+            << "models//"
             << params.exp_name 
             << "_" << (cnt_batches/params.save_freq) 
             << '_' << params.LAYERS
