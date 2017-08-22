@@ -3,6 +3,8 @@
 #include "my_cl-args.h"
 #include "my_dict.h"
 #include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 using namespace std;
 using namespace dynet;
@@ -231,10 +233,10 @@ int main(int argc, char** argv) {
       }
       // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
-        cerr << endl << "start valid..." << endl;
+        cerr << endl << "start validation..." << endl;
         // translation
         ostringstream dev_out_ss;
-        system("mkdir valid");
+        mkdir("valid", 755);
         dev_out_ss << "valid//dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
@@ -252,13 +254,11 @@ int main(int argc, char** argv) {
                params.dev_labels_file + " < " + dev_out_ss.str() + " > " + bleu_res;
         system(cmd.c_str());
         // readin bleu score
-        ifstream fin(bleu_res);
-        assert(fin);
+        ifstream fin(bleu_res); assert(fin);
         string bleu_str = "";
-        getline(fin, bleu_str);
-        assert(bleu_str != "");
+        getline(fin, bleu_str); assert(bleu_str != "");
         // save each model
-        system("mkdir models");
+        mkdir("models", 755);
         ostringstream model_out_ss;
         model_out_ss 
             << "models//"
@@ -283,8 +283,8 @@ int main(int argc, char** argv) {
     // Increment epoch
     ++epoch;
   }
-  cerr << endl << "end training." << endl;
+  cerr << endl << "end training success.   " << endl;
   // Free memory
-  delete iteration;
+  delete iteration; 
+  for (int i=0;i<28;i++) cerr << "\b";
 }
-
