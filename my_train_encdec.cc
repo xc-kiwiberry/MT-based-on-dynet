@@ -257,6 +257,7 @@ int main(int argc, char** argv) {
         string bleu_str = "";
         getline(fin, bleu_str);
         assert(bleu_str != "");
+        cerr << "bleu_str : " << bleu_str << endl;
         cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
         system("mkdir models");
@@ -271,7 +272,7 @@ int main(int argc, char** argv) {
             << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
             << "_BLEU=" << bleu_str.substr(7, 12)
             << ".params";
-        cerr << "model will be saved in " << model_out_ss.str();
+        cerr << "model will be saved in " << model_out_ss.str() << endl;
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
