@@ -257,10 +257,6 @@ int main(int argc, char** argv) {
         string bleu_str = "";
         getline(fin, bleu_str);
         assert(bleu_str != "");
-        cerr << "bleu_str : " << bleu_str << endl;
-        cerr << "sub_bleu_str : " << bleu_str.substr(7, 12) << endl;
-        for (auto tt : bleu_str) cerr << tt << endl;
-        cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
         system("mkdir models");
         ostringstream model_out_ss;
@@ -272,9 +268,8 @@ int main(int argc, char** argv) {
             << '_' << params.INPUT_DIM
             << '_' << params.HIDDEN_DIM 
             << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
-            << "_BLEU=" << bleu_str.substr(7, 12)
+            << "_BLEU=" << bleu_str.substr(7, (bleu_str[8]=='.')?4:5)
             << ".params";
-        cerr << "model will be saved in " << model_out_ss.str() << endl;
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
