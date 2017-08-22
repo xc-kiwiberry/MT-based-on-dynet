@@ -285,6 +285,5 @@ int main(int argc, char** argv) {
   }
   cerr << endl << "end training success.   " << endl;
   // Free memory
-  delete iteration; 
-  for (int i=0;i<28;i++) cerr << "\b";
+  delete iteration;
 }
