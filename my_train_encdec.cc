@@ -2,6 +2,7 @@
 #include "my_encdec.h"
 #include "my_cl-args.h"
 #include "my_dict.h"
+#include <signal.h>
 
 using namespace std;
 using namespace dynet;
@@ -31,6 +32,11 @@ void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
   }
 }
 
+volatile bool keyBoardIntOccur = false;
+static void handleInt(int sig){
+  keyBoardIntOccur = true;
+}
+
 // Datasets
   vector<pp> train_data;
   vector<vector<int>> training, training_label;
@@ -43,6 +49,9 @@ void debug(const vector<float>& v) {
 } 
 
 int main(int argc, char** argv) {
+  // register signal 
+  signal(SIGINT, handleInt);
+
   // Fetch dynet params ----------------------------------------------------------------------------
   auto dyparams = dynet::extract_dynet_params(argc, argv);
   dynet::initialize(dyparams);
@@ -175,12 +184,12 @@ int main(int argc, char** argv) {
   	unsigned chars = 0;
   // Start timer
     Timer* iteration = new Timer("completed in");
+    cerr << "start training" << endl;
   // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
   while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
     // Update the optimizer
     if (epoch > 0) adadelta.update_epoch();
-    cerr << endl << "start training epoch " << epoch << endl;
-    
+        
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
       if (true) {
@@ -222,6 +231,7 @@ int main(int argc, char** argv) {
       }
       // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
+        cerr << endl << "start valid..." << endl;
         // translation
         ostringstream dev_out_ss;
         dev_out_ss << "dev_" << cnt_batches/params.save_freq << ".out";
@@ -234,6 +244,7 @@ int main(int argc, char** argv) {
             fout << dictOut.convert(res[j]) << " ";
           fout << endl;
         }
+        cerr << "translation completed..." << endl;
         // multi-bleu
         const string bleu_res = "tmp_bleu.res";
         string cmd = "perl multi-bleu.perl " + 
@@ -245,6 +256,7 @@ int main(int argc, char** argv) {
         string bleu_str = "";
         getline(fin, bleu_str);
         assert(bleu_str != "");
+        cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
         ostringstream model_out_ss;
         model_out_ss 
@@ -259,15 +271,17 @@ int main(int argc, char** argv) {
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
+        cerr << "save model:" << model_out_ss.str() << " success." << endl;
         // Reinitialize sum_loss
         sum_loss = 0;
       }
+      if (keyBoardIntOccur) break;
     }
-    cerr << endl << "end training an epoch" << endl << endl;
-
+    if (keyBoardIntOccur) break;
     // Increment epoch
     ++epoch;
   }
+  cerr << endl << "end training" << endl;
   // Free memory
   delete iteration;
 }
