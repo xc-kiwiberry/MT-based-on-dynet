@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
         // translation
         ostringstream dev_out_ss;
         system("mkdir valid");
-        dev_out_ss << "valid/dev_" << cnt_batches/params.save_freq << ".out";
+        dev_out_ss << "valid//dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
         for (int i = 0; i < dev.size(); i++) {
@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
         }
         cerr << "translation completed..." << endl;
         // multi-bleu
-        const string bleu_res = "valid/.tmp_bleu.res";
+        const string bleu_res = "valid//.tmp_bleu.res";
         string cmd = "perl multi-bleu.perl " + 
                params.dev_labels_file + " < " + dev_out_ss.str() + " > " + bleu_res;
         system(cmd.c_str());
@@ -258,6 +258,7 @@ int main(int argc, char** argv) {
         getline(fin, bleu_str);
         assert(bleu_str != "");
         cerr << "bleu_str : " << bleu_str << endl;
+        for (auto tt : bleu_str) cerr << tt << endl;
         cerr << "calc bleu completed... bleu=" << bleu_str.substr(7, 12) << endl; 
         // save each model
         system("mkdir models");
