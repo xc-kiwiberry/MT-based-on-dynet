@@ -46,10 +46,8 @@ int main(int argc, char** argv) {
   cerr << "create model success" << endl;
 
   // Load model ---------------------------------------------------------------------------------
-  ifstream model_in(params.model_file);
-  assert(model_in);  
-  boost::archive::text_iarchive ia(model_in);
-  ia >> model >> lm;
+  TextFileLoader loader(params.model_file);
+  loader.populate(model);
   cerr << params.model_file << " has been loaded." << endl;
 
   // Translate ---------------------------------------------------------------------------------
