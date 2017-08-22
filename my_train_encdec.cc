@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
         cerr << "start validation..." << endl;
         // translation
         ostringstream dev_out_ss;
-        mkdir("valid", 755);
+        mkdir("valid", 0755);
         dev_out_ss << "valid//dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
         string bleu_str = "";
         getline(fin, bleu_str); assert(bleu_str != "");
         // save each model
-        mkdir("models", 755);
+        mkdir("models", 0755);
         ostringstream model_out_ss;
         model_out_ss 
             << "models//"
