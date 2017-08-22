@@ -234,6 +234,7 @@ int main(int argc, char** argv) {
         cerr << endl << "start valid..." << endl;
         // translation
         ostringstream dev_out_ss;
+        system("mkdir valid");
         dev_out_ss << "valid/dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
@@ -269,6 +270,7 @@ int main(int argc, char** argv) {
             << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
             << "_BLEU=" << bleu_str.substr(7, 12)
             << ".params";
+        cerr << "model will be saved in " << model_out_ss.str();
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
@@ -282,7 +284,7 @@ int main(int argc, char** argv) {
     // Increment epoch
     ++epoch;
   }
-  cerr << endl << "end training" << endl;
+  cerr << endl << "end training." << endl;
   // Free memory
   delete iteration;
 }
