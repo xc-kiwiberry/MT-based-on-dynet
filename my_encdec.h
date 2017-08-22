@@ -8,6 +8,7 @@
 #include "dynet/expr.h"
 #include "dynet/tensor.h"
 #include "dynet/gru.h"
+#include "dynet/io.h"
 
 #include <random>
 #include <iostream>
@@ -18,6 +19,9 @@
 #include <utility>
 #include <unistd.h>
 #include <float.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 using namespace std;
 using namespace dynet;

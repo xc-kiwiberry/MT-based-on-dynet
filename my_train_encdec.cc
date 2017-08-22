@@ -2,10 +2,7 @@
 #include "my_encdec.h"
 #include "my_cl-args.h"
 #include "my_dict.h"
-#include "dynet/io.h"
-#include <signal.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+
 
 using namespace std;
 using namespace dynet;
