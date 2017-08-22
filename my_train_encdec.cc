@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
         cerr << endl << "start valid..." << endl;
         // translation
         ostringstream dev_out_ss;
-        dev_out_ss << "dev_" << cnt_batches/params.save_freq << ".out";
+        dev_out_ss << "valid/dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
         for (int i = 0; i < dev.size(); i++) {
@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
         }
         cerr << "translation completed..." << endl;
         // multi-bleu
-        const string bleu_res = "tmp_bleu.res";
+        const string bleu_res = "valid/.tmp_bleu.res";
         string cmd = "perl multi-bleu.perl " + 
                params.dev_labels_file + " < " + dev_out_ss.str() + " > " + bleu_res;
         system(cmd.c_str());
@@ -260,6 +260,7 @@ int main(int argc, char** argv) {
         // save each model
         ostringstream model_out_ss;
         model_out_ss 
+            << "models/"
             << params.exp_name 
             << "_" << (cnt_batches/params.save_freq) 
             << '_' << params.LAYERS
@@ -271,7 +272,7 @@ int main(int argc, char** argv) {
         ofstream out(model_out_ss.str());
         boost::archive::text_oarchive oa(out);
         oa << model << lm;
-        cerr << "save model:" << model_out_ss.str() << " success." << endl;
+        cerr << "save model: " << model_out_ss.str() << " success." << endl;
         // Reinitialize sum_loss
         sum_loss = 0;
       }
