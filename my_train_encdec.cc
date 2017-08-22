@@ -283,7 +283,7 @@ int main(int argc, char** argv) {
     // Increment epoch
     ++epoch;
   }
-  cerr << endl << "end training success.   " << endl;
+  cerr << endl << "end training success." << endl;
   // Free memory
   delete iteration;
 }
