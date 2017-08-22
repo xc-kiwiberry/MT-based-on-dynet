@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
   cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
 
   // Initialize model and trainer ------------------------------------------------------------------
-  Model model;
+  ParameterCollection model;
   // Use adadelta optimizer
   AdamTrainer adadelta = AdamTrainer(model, 0.0005);
   double slow_start = 0.998;// mid start = 0, begin = 0.998
@@ -153,9 +153,8 @@ int main(int argc, char** argv) {
 
   // Load preexisting weights (if provided)
   if (params.model_file != "") {
-    ifstream in(params.model_file);
-    boost::archive::text_iarchive ia(in);
-    ia >> model >> lm;
+    TextFileLoader loader(params.model_file);
+    loader.populate(model);
     cerr << params.model_file << " has been loaded." << endl;
   }
 
@@ -270,9 +269,8 @@ int main(int argc, char** argv) {
             << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
             << "_BLEU=" << bleu_str.substr(7, (bleu_str[8]=='.')?4:5)
             << ".params";
-        ofstream out(model_out_ss.str());
-        boost::archive::text_oarchive oa(out);
-        oa << model << lm;
+        TextFileSaver saver(model_out_ss.str());
+        saver.save(model);
         cerr << "save model: " << model_out_ss.str() << " success." << endl << endl;
         // Reinitialize sum_loss
         sum_loss = 0;

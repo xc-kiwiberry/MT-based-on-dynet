@@ -19,9 +19,6 @@
 #include <unistd.h>
 #include <float.h>
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-
 using namespace std;
 using namespace dynet;
 using namespace dynet::expr;
@@ -65,7 +62,7 @@ public:
 
     EncoderDecoder() {}
 
-    explicit EncoderDecoder(Model& model,
+    explicit EncoderDecoder(ParameterCollection& model,
                             unsigned num_layers,
                             unsigned input_dim,
                             unsigned hidden_dim,
@@ -391,15 +388,4 @@ public:
         //}
     }//*/
 
-private:
-    friend class boost::serialization::access;
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int) {
-        ar & LAYERS & INPUT_DIM & HIDDEN_DIM & ATTENTION_SIZE;
-        ar & p_c & p_ec & p_hid2hid & p_b_hid;
-        ar & p_readout_allthree & p_readout_offset;
-        ar & p_hid2emb & p_emb2voc & p_b_voc;
-        ar & attention_w1 & attention_w2 & attention_v;
-        ar & dec_builder & bwd_enc_builder & fwd_enc_builder;
-    }
 };
