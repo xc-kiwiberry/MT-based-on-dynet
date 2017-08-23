@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
         loss = 0;
       }
       // valid & save ---------------------------
-      if (cnt_batches % params.save_freq == 0 && cnt_batches / params.save_freq > 5){
+      if (cnt_batches % params.save_freq == 0){
         cerr << "start validation..." << endl;
         // translation
         ostringstream dev_out_ss;
