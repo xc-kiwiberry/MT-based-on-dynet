@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
         dev_out_ss << "valid//dev_" << cnt_batches/params.save_freq << ".out";
         ofstream fout(dev_out_ss.str());
         int miss = 0;
-        for (int i = 0; i < dev.size(); i++) {
+        for (int i = 0; i < dev.size() && i < 10; i++) {
           ComputationGraph cg;
           vector<unsigned> res = lm.generate(dev[i], miss, cg);
           for (int j = 0; j < res.size()-1 ; ++j) 
