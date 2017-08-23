@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
         loss = 0;
       }
       // valid & save ---------------------------
-      if (cnt_batches % params.save_freq == 0){
+      if (cnt_batches % params.save_freq == 0 && cnt_batches / params.save_freq > 5){
         cerr << "start validation..." << endl;
         // translation
         ostringstream dev_out_ss;
@@ -243,8 +243,12 @@ int main(int argc, char** argv) {
           for (int j = 0; j < res.size()-1 ; ++j) 
             fout << dictOut.convert(res[j]) << " ";
           fout << endl;
+          for (int j=0;j<30;j++) cerr << "\b";
+          cerr << "already translated " << i+1 << " sents. ";
         }
-        cerr << "translation completed..." << endl;
+        cerr << endl << "translation completed..." ;
+        delete iteration;
+        iteration = new Timer("completed in");
         // multi-bleu
         const string bleu_res = "valid//.tmp_bleu.res";
         string cmd = "perl multi-bleu.perl " + 
@@ -277,7 +281,7 @@ int main(int argc, char** argv) {
     // Increment epoch
     ++epoch;
   }
-  
+
   // Free memory
   delete iteration;
 }

@@ -382,7 +382,7 @@ public:
             return final_result[min_element(final_loss.begin(),final_loss.end())-final_loss.begin()];
         else { //if (beam_size >= 100) {
             miss++;
-            cerr << "cannot find translation in max beam size " << beam_size << endl;
+            //cerr << "cannot find translation in max beam size " << beam_size << endl;
             return result[0];
         }
         //else {
