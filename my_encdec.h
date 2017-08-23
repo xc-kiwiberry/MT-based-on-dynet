@@ -182,7 +182,7 @@ public:
     /**
      * attend
      */
-    Expression attend(Expression input_mat, vector<Expression> state, Expression w1dt, Expression xmask, ComputationGraph& cg) {
+    Expression attend(const Expression& input_mat, const vector<Expression>& state, const Expression& w1dt, const Expression& xmask, ComputationGraph& cg) {
         // w1dt -> (att,|F|)
         //att_weights=v∗tanh(encodedInput*w1+decoderstate*w2)
         Expression w2 = parameter(cg, attention_w2); // (att,hidden_dim*layers*x) , x=1 for GRU, x=2 for lstm 
@@ -196,7 +196,7 @@ public:
     /**
      * Batched decoding
      */
-    Expression decode(const vector<Expression> encoded,
+    Expression decode(const vector<Expression>& encoded,
                       const vector<vector<int>>& osents,
                       const vector<vector<float>>& y_mask,
                       int id,
@@ -285,7 +285,7 @@ public:
     /**
      * Generate a sentence from an encoding
      */
-    vector<unsigned> generate(vector<Expression> encoded, unsigned oslen, int& miss, ComputationGraph & cg, int beam_size = 10) {
+    vector<unsigned> generate(const vector<Expression>& encoded, const unsigned& oslen, int& miss, ComputationGraph & cg, int beam_size = 10) {
 
         // parameter
         Expression hid2hid = parameter(cg, p_hid2hid);
