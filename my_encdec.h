@@ -182,7 +182,7 @@ public:
     /**
      * attend
      */
-    Expression attend(Expression input_mat, vector<Expression> state, Expression w1dt, Expression xmask, ComputationGraph& cg) {
+    Expression attend(const Expression& input_mat, const vector<Expression>& state, const Expression& w1dt, const Expression& xmask, ComputationGraph& cg) {
         // w1dt -> (att,|F|)
         //att_weights=v∗tanh(encodedInput*w1+decoderstate*w2)
         Expression w2 = parameter(cg, attention_w2); // (att,hidden_dim*layers*x) , x=1 for GRU, x=2 for lstm 
@@ -327,7 +327,7 @@ public:
             //Expression maxout = max_dim(reshape(i_r_t, Dim({HIDDEN_DIM/2, 2})), 1);
             Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
             Expression i_ydist = log_softmax(prob_vocab);
-            vector<float> probs = as_vector(i_ydist.value()); // maybe need joint each batch?
+            vector<float> probs = as_vector(i_ydist.value()); 
             //assert(probs.size() == beam_size * TGT_VOCAB_SIZE);
 
             vector<float>& loss = probs;
