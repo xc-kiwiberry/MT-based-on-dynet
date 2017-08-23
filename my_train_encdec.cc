@@ -32,9 +32,11 @@ void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
   }
 }
 
-volatile bool keyBoardIntOccur = false;
 static void handleInt(int sig){
-  keyBoardIntOccur = true;
+  cerr << endl << "end training success." << endl;
+  // Free memory
+  delete iteration;
+  exit(0);
 }
 
 // Datasets
@@ -49,9 +51,6 @@ void debug(const vector<float>& v) {
 } 
 
 int main(int argc, char** argv) {
-  // register signal 
-  signal(SIGINT, handleInt);
-
   // Fetch dynet params ----------------------------------------------------------------------------
   auto dyparams = dynet::extract_dynet_params(argc, argv);
   dynet::initialize(dyparams);
@@ -135,8 +134,8 @@ int main(int argc, char** argv) {
 
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;
-  // Use adadelta optimizer
-  AdamTrainer adadelta = AdamTrainer(model, 0.0005);
+  // Use adam optimizer
+  AdamTrainer adam = AdamTrainer(model, 0.0005);
   double slow_start = 0.998;// mid start = 0, begin = 0.998
 
   cerr << "create optimizer success." << endl;
@@ -184,10 +183,13 @@ int main(int argc, char** argv) {
   // Start timer
     Timer* iteration = new Timer("completed in");
     cerr << endl << "start training" << endl;
+  // register signal 
+    signal(SIGINT, handleInt);
+    
   // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
   while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
     // Update the optimizer
-    if (epoch > 0) adadelta.update_epoch();
+    if (epoch > 0) adam.update_epoch();
         
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
@@ -209,8 +211,8 @@ int main(int argc, char** argv) {
         // Compute gradient with backward pass
         cg.backward(loss_expr);
         // Update parameters
-        adadelta.eta = 0.0005 * (1 - slow_start);
-        adadelta.update();
+        adam.eta = 0.0005 * (1 - slow_start);
+        adam.update();
         slow_start *= 0.998;
         // print info
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
@@ -220,7 +222,7 @@ int main(int argc, char** argv) {
       if (cnt_batches % params.print_freq == 0) {
         // Print informations
         cerr << endl;
-        adadelta.status();
+        adam.status();
         cerr << " loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
         // Reinitialize timer
         delete iteration;
@@ -273,13 +275,9 @@ int main(int argc, char** argv) {
         // Reinitialize sum_loss
         sum_loss = 0;
       }
-      if (keyBoardIntOccur) break;
     }
-    if (keyBoardIntOccur) break;
     // Increment epoch
     ++epoch;
   }
-  cerr << endl << "end training success." << endl;
-  // Free memory
-  delete iteration;
+  
 }

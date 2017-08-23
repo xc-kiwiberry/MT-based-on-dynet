@@ -182,7 +182,7 @@ public:
     /**
      * attend
      */
-    Expression attend(const Expression& input_mat, const vector<Expression>& state, const Expression& w1dt, const Expression& xmask, ComputationGraph& cg) {
+    Expression attend(Expression input_mat, vector<Expression> state, Expression w1dt, Expression xmask, ComputationGraph& cg) {
         // w1dt -> (att,|F|)
         //att_weights=v∗tanh(encodedInput*w1+decoderstate*w2)
         Expression w2 = parameter(cg, attention_w2); // (att,hidden_dim*layers*x) , x=1 for GRU, x=2 for lstm 
