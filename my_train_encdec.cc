@@ -34,8 +34,6 @@ void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
 
 static void handleInt(int sig){
   cerr << endl << "end training success." << endl;
-  // Free memory
-  delete iteration;
   exit(0);
 }
 
@@ -185,7 +183,7 @@ int main(int argc, char** argv) {
     cerr << endl << "start training" << endl;
   // register signal 
     signal(SIGINT, handleInt);
-    
+
   // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
   while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
     // Update the optimizer
@@ -280,4 +278,6 @@ int main(int argc, char** argv) {
     ++epoch;
   }
   
+  // Free memory
+  delete iteration;
 }
