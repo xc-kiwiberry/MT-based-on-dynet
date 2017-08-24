@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
   ostringstream os;
   os << "test" 
      //<< "_" << params.model_file.substr(0, 6)
-  	 //<< "_" << params.exp_name
-     << "_" << params.test_file.substr(0,6)
+  	 << "_" << params.exp_name
+     //<< "_" << params.test_file.substr(0,6)
      << "_" << params.LAYERS 
      << "_" << params.INPUT_DIM
      << "_" << params.HIDDEN_DIM
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   cerr << "translation finished. " << miss << " sents can't translate in beam_size 10." << endl;
 
   string cmd = "perl multi-bleu.perl " +
-                params.test_labels_file + " < " + os.str() + " > " +  params.test_file.substr(0,6) + ".bleu_res";
+                params.test_labels_file + " < " + os.str() + " > " +  params.exp_name + ".bleu_res";
   system(cmd.c_str());
   
   return 0;
