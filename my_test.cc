@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   // Load datasets ---------------------------------------------------------------------------------
   
   read_corpus(params.test_file, "test", dictIn, test);
-  if (Params.debug_info){
+  if (params.debug_info){
     read_corpus(params.test_labels_file + "0", "test_label", dictOut, test_label);
     assert(test.size() == test_label.size());
   }
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     vector<unsigned> res = lm.generate(test[i], miss, cg);
     cerr << ++cnt << " : ";
     delete iteration;
-    if (Params.debug_info){
+    if (params.debug_info){
       cerr << "src---:";
       for (int j = 0; j < test[i].size()-1 ; ++j) {
         cerr << dictIn.convert(test[i][j]) << " ";
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     }
     cerr << endl;
     fout << endl;
-    if (Params.debug_info){
+    if (params.debug_info){
       cerr << "std0---:";
       for (int j = 0; j < test_label[i].size()-1 ; ++j) {
         cerr << dictOut.convert(test_label[i][j]) << " ";

@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
                params.dev_labels_file + " < .tmp_dev_trans > .tmp_bleu_res";
         system(cmd.c_str());
         // readin bleu score
-        ifstream ifs_bleu_res(".tmp_bleu_res"); assert(fin);
+        ifstream ifs_bleu_res(".tmp_bleu_res"); assert(ifs_bleu_res);
         string bleu_str = "";
         getline(ifs_bleu_res, bleu_str); assert(bleu_str != "");
         double cur_bleu;
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
         }
         // print log
         ofstream ofs_log("log", ios::out|ios::app);
-        osf_log << valid_info_ss.str();
+        ofs_log << valid_info_ss.str();
         // Reinitialize sum_loss
         sum_loss = 0;
       }
