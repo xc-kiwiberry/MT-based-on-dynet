@@ -206,9 +206,7 @@ int main(int argc, char** argv) {
         // Compute gradient with backward pass
         cg.backward(loss_expr);
         // Update parameters
-        adam.eta = 0.0005 * (1 - slow_start);
         adam.update();
-        slow_start *= 0.998;
         // print info
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
