@@ -217,7 +217,7 @@ int main(int argc, char** argv) {
       if (cnt_batches % params.print_freq == 0) {
         // Print informations
         cerr << endl;
-        cerr << " loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
+        cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
         // Reinitialize timer
         delete iteration;
         iteration = new Timer("completed in");
@@ -282,6 +282,7 @@ int main(int argc, char** argv) {
         // Reinitialize sum_loss
         sum_loss = 0;
       }
+      cerr << endl;
     }
   }
 
