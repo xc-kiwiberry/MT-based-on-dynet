@@ -276,13 +276,13 @@ int main(int argc, char** argv) {
           saver.save(model);
           cerr << "save model: " << model_name_ss.str() << " success." << endl << endl;
         }
+        cerr << endl;
         // print log
         ofstream ofs_log("log", ios::out|ios::app);
         ofs_log << valid_info_ss.str();
         // Reinitialize sum_loss
         sum_loss = 0;
       }
-      cerr << endl;
     }
   }
 
