@@ -32,18 +32,18 @@ int main(int argc, char** argv) {
   // Load datasets ---------------------------------------------------------------------------------
   
   read_corpus(params.test_file, "test", dictIn, test);
-  read_corpus(params.test_labels_file + "0", "test_label", dictOut, test_label);
-
-  assert(test.size() == test_label.size());
+  if (Params.debug_info){
+    read_corpus(params.test_labels_file + "0", "test_label", dictOut, test_label);
+    assert(test.size() == test_label.size());
+  }
 
   // Create model ---------------------------------------------------------------------------------
-  Model model;
+  ParameterCollection model;
   EncoderDecoder<GRUBuilder> lm(model,
                                  params.LAYERS,
                                  params.INPUT_DIM,
                                  params.HIDDEN_DIM,
                                  params.ATTENTION_SIZE);
-  cerr << "create model success" << endl;
 
   // Load model ---------------------------------------------------------------------------------
   TextFileLoader loader(params.model_file);
@@ -51,17 +51,16 @@ int main(int argc, char** argv) {
   cerr << params.model_file << " has been loaded." << endl;
 
   // Translate ---------------------------------------------------------------------------------
-  ostringstream os;
-  os << "test" 
-     //<< "_" << params.model_file.substr(0, 6)
+  mkdir("test", 0755);
+  ostringstream trans_out_ss;
+  trans_out_ss << "test//test" 
   	 << "_" << params.exp_name
-     //<< "_" << params.test_file.substr(0,6)
      << "_" << params.LAYERS 
      << "_" << params.INPUT_DIM
      << "_" << params.HIDDEN_DIM
      << ".out";
-  ofstream fout(os.str());
-  cerr << "translation will be saved in " << os.str() << endl;
+  ofstream fout(trans_out_ss.str());
+  cerr << "translation will be saved in " << trans_out_ss.str() << endl;
 
   int cnt = 0, miss = 0;
   for (int i = 0; i < test.size(); i++) {
@@ -70,11 +69,13 @@ int main(int argc, char** argv) {
     vector<unsigned> res = lm.generate(test[i], miss, cg);
     cerr << ++cnt << " : ";
     delete iteration;
-    cerr << "src---:";
-    for (int j = 0; j < test[i].size()-1 ; ++j) {
-      cerr << dictIn.convert(test[i][j]) << " ";
+    if (Params.debug_info){
+      cerr << "src---:";
+      for (int j = 0; j < test[i].size()-1 ; ++j) {
+        cerr << dictIn.convert(test[i][j]) << " ";
+      }
+      cerr << endl;
     }
-    cerr << endl;
     cerr << "res---:";
     for (int j = 0; j < res.size()-1 ; ++j) {
       cerr << dictOut.convert(res[j]) << " ";
@@ -82,16 +83,19 @@ int main(int argc, char** argv) {
     }
     cerr << endl;
     fout << endl;
-    cerr << "std---:";
-    for (int j = 0; j < test_label[i].size()-1 ; ++j) {
-      cerr << dictOut.convert(test_label[i][j]) << " ";
+    if (Params.debug_info){
+      cerr << "std0---:";
+      for (int j = 0; j < test_label[i].size()-1 ; ++j) {
+        cerr << dictOut.convert(test_label[i][j]) << " ";
+      }
+      cerr << endl;
     }
-    cerr << endl;
   }
   cerr << "translation finished. " << miss << " sents can't translate in beam_size 10." << endl;
 
-  string cmd = "perl multi-bleu.perl " +
-                params.test_labels_file + " < " + os.str() + " > " +  params.exp_name + ".bleu_res";
+  string cmd = "perl multi-bleu.perl " + params.test_labels_file 
+                  + " < " + trans_out_ss.str() 
+                  + " > " + "test//" + params.exp_name + ".bleu_res";
   system(cmd.c_str());
   
   return 0;

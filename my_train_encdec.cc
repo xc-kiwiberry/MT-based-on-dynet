@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
   ParameterCollection model;
   // Use adam optimizer
   AdamTrainer adam = AdamTrainer(model, 0.0005);
-  double slow_start = 0.998;// mid start = 0, begin = 0.998
+  double slow_start = 0.998;
 
   cerr << "create optimizer success." << endl;
 
@@ -144,14 +144,14 @@ int main(int argc, char** argv) {
                                  params.INPUT_DIM,
                                  params.HIDDEN_DIM,
                                  params.ATTENTION_SIZE);
-  cerr << "create model success." << endl;
-
+  
   // Load preexisting weights (if provided)
   if (params.model_file != "") {
     TextFileLoader loader(params.model_file);
     loader.populate(model);
     cerr << params.model_file << " has been loaded." << endl;
   }
+  else cerr << "create model from scratch success." << endl;
 
   // Params -----------------------------------------------------------------------
 
@@ -174,21 +174,18 @@ int main(int argc, char** argv) {
 
   int epoch = 0;
   int cnt_batches = 1;
-  // Initialize loss and number of chars(/word) (for loss per char/word)
+  double best_bleu = 0;
+  // Initialize loss 
   	double loss = 0;
   	double sum_loss = 0;
-  	unsigned chars = 0;
   // Start timer
     Timer* iteration = new Timer("completed in");
     cerr << endl << "start training" << endl;
   // register signal 
     signal(SIGINT, handleInt);
 
-  // Run for the given number of epochs (or indefinitely if params.NUM_EPOCHS is negative)
-  while (epoch < params.NUM_EPOCHS || params.NUM_EPOCHS < 0) {
-    // Update the optimizer
-    if (epoch > 0) adam.update_epoch();
-        
+  // Run indefinitely
+  while (true) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
       if (true) {
@@ -199,7 +196,7 @@ int main(int argc, char** argv) {
         //cerr << "src sent len = " << training[id].size() << ", tgt sent len = " << training_label[id].size() << endl;
         unsigned bsize = std::min((unsigned)training.size() - id, params.BATCH_SIZE);
         // Encode the batch
-        vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, chars, cg);
+        vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, cg);
         // Decode and get error (negative log likelihood)
         Expression loss_expr = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
         // Get scalar error for monitoring
@@ -220,7 +217,6 @@ int main(int argc, char** argv) {
       if (cnt_batches % params.print_freq == 0) {
         // Print informations
         cerr << endl;
-        adam.status();
         cerr << " loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
         // Reinitialize timer
         delete iteration;
@@ -232,54 +228,61 @@ int main(int argc, char** argv) {
       if (cnt_batches % params.save_freq == 0){
         cerr << "start validation..." << endl;
         // translation
-        ostringstream dev_out_ss;
-        mkdir("valid", 0755);
-        dev_out_ss << "valid//dev_" << cnt_batches/params.save_freq << ".out";
-        ofstream fout(dev_out_ss.str());
+        ofstream ofs_dev_trans(".tmp_dev_trans");
         int miss = 0;
         for (int i = 0; i < dev.size(); i++) {
           ComputationGraph cg;
           vector<unsigned> res = lm.generate(dev[i], miss, cg);
           for (int j = 0; j < res.size()-1 ; ++j) 
-            fout << dictOut.convert(res[j]) << " ";
-          fout << endl;
+            ofs_dev_trans << dictOut.convert(res[j]) << " ";
+          ofs_dev_trans << endl;
           for (int j=0;j<30;j++) cerr << "\b";
           cerr << "already translated " << i+1 << " sents. ";
         }
-        cerr << endl << "translation completed..." ;
+        cerr << endl << "translation completed..." << miss << " sents can't be translated...";
         delete iteration;
         iteration = new Timer("completed in");
         // multi-bleu
-        const string bleu_res = "valid//.tmp_bleu.res";
         string cmd = "perl multi-bleu.perl " + 
-               params.dev_labels_file + " < " + dev_out_ss.str() + " > " + bleu_res;
+               params.dev_labels_file + " < .tmp_dev_trans > .tmp_bleu_res";
         system(cmd.c_str());
         // readin bleu score
-        ifstream fin(bleu_res); assert(fin);
+        ifstream ifs_bleu_res(".tmp_bleu_res"); assert(fin);
         string bleu_str = "";
-        getline(fin, bleu_str); assert(bleu_str != "");
-        // save each model
+        getline(ifs_bleu_res, bleu_str); assert(bleu_str != "");
+        double cur_bleu;
+        sscanf(bleu_str.substr(7, 5).c_str(), "%lf", &cur_bleu);
+        // valid info
+        ostringstream valid_info_ss;
+        valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
+            << " loss/bacth = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
+            << " cur_bleu = " << cur_bleu
+            << " best_bleu = " << max(cur_bleu, best_bleu)
+            << endl;
+        cerr << valid_info_ss.str();
+        // save best model
         mkdir("models", 0755);
-        ostringstream model_out_ss;
-        model_out_ss 
+        ostringstream model_name_ss;
+        model_name_ss 
             << "models//"
             << params.exp_name 
-            << "_" << (cnt_batches/params.save_freq) 
             << '_' << params.LAYERS
             << '_' << params.INPUT_DIM
             << '_' << params.HIDDEN_DIM 
-            << "_tloss=" << (sum_loss * params.BATCH_SIZE / params.save_freq) 
-            << "_BLEU=" << bleu_str.substr(7, (bleu_str[8]=='.')?4:5)
             << ".params";
-        TextFileSaver saver(model_out_ss.str());
-        saver.save(model);
-        cerr << "save model: " << model_out_ss.str() << " success." << endl << endl;
+        if (best_bleu < cur_bleu){
+          best_bleu = cur_bleu;
+          TextFileSaver saver(model_name_ss.str());
+          saver.save(model);
+          cerr << "save model: " << model_name_ss.str() << " success." << endl << endl;
+        }
+        // print log
+        ofstream ofs_log("log", ios::out|ios::app);
+        osf_log << valid_info_ss.str();
         // Reinitialize sum_loss
         sum_loss = 0;
       }
     }
-    // Increment epoch
-    ++epoch;
   }
 
   // Free memory

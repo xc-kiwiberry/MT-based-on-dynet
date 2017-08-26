@@ -50,7 +50,6 @@ public:
     _word2id.clear();
     _words.clear();
 
-    //_words.push_back(string("<s>")); // kSOS
     _words.push_back(string("</s>")); // kEOS = 0
     _words.push_back(string("<unk>")); // kUNK = 1
     for (int i = 0; i < temp.size() && i < _limit; i++) {

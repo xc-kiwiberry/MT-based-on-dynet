@@ -4,7 +4,6 @@
 #include "dynet/timing.h"
 #include "dynet/rnn.h"
 #include "dynet/lstm.h"
-#include "dynet/dict.h"
 #include "dynet/expr.h"
 #include "dynet/tensor.h"
 #include "dynet/gru.h"
@@ -101,7 +100,6 @@ public:
                       const vector<vector<float>>& x_mask,
                       unsigned id,
                       unsigned bsize,
-                      unsigned & chars,
                       ComputationGraph & cg) {
         // Set variables for the input sentence
         const unsigned islen = isents[id].size();
@@ -176,8 +174,7 @@ public:
         vector<float> mask(insent.size(), 1.);
         auto insents = vector<vector<int>>(1, insent);
         auto masks = vector<vector<float>>(1, mask);
-        unsigned chars = 0;
-        return encode(insents, masks, 0, 1, chars, cg);
+        return encode(insents, masks, 0, 1, cg);
     }
     /**
      * attend

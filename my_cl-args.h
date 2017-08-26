@@ -35,7 +35,7 @@ struct Params {
   unsigned BATCH_SIZE = 1;
   unsigned print_freq = 1000;
   unsigned save_freq = 10000;
-  int NUM_EPOCHS = -1;
+  bool debug_info = false;
 };
 
 /**
@@ -159,14 +159,6 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.BATCH_SIZE;
       i++;
-    } else if (arg == "--num_epochs" || arg == "-N") {
-      if (i + 1 == argc) {
-        std::cerr << "No matching argument for " << arg << std::endl;
-        abort();
-      }
-      istringstream d(argv[i + 1]);
-      d >> params.NUM_EPOCHS;
-      i++;
     } else if (arg == "--print_freq" || arg == "-pf") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
@@ -182,6 +174,14 @@ void get_args(int argc,
       }
       istringstream d(argv[i + 1]);
       d >> params.save_freq;
+      i++;
+    } else if (arg == "--debug_info" || arg == "-di") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.debug_info;
       i++;
     } 
     i++;
