@@ -226,7 +226,7 @@ int main(int argc, char** argv) {
       }
       // valid & save ---------------------------
       if (cnt_batches % params.save_freq == 0){
-        cerr << "start validation..." << endl;
+        cerr << endl << "start validation..." << endl;
         // translation
         ofstream ofs_dev_trans(".tmp_dev_trans");
         int miss = 0;
@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
           for (int j=0;j<30;j++) cerr << "\b";
           cerr << "already translated " << i+1 << " sents. ";
         }
-        cerr << endl << "translation completed..." << miss << " sents can't be translated...";
+        cerr << endl << "translation completed... " << miss << " sents can't be translated...";
         delete iteration;
         iteration = new Timer("completed in");
         // multi-bleu
@@ -256,8 +256,8 @@ int main(int argc, char** argv) {
         ostringstream valid_info_ss;
         valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
             << " loss/bacth = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
-            << " cur_bleu = " << cur_bleu
-            << " best_bleu = " << max(cur_bleu, best_bleu)
+            << ", cur_bleu = " << cur_bleu
+            << ", best_bleu = " << max(cur_bleu, best_bleu)
             << endl;
         cerr << valid_info_ss.str();
         // save best model
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
           best_bleu = cur_bleu;
           TextFileSaver saver(model_name_ss.str());
           saver.save(model);
-          cerr << "save model: " << model_name_ss.str() << " success." << endl << endl;
+          cerr << "save model: " << model_name_ss.str() << " success." << endl;
         }
         cerr << endl;
         // print log
