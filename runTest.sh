@@ -1,5 +1,6 @@
 #!/bin/bash
 ./mt_test.exe \
+ --dynet-devices GPU:7 \
  --dynet-mem 2300 \
  --name nist06 \
  -m old_models//big_13_1_620_1000_tloss=3344.99_BLEU=35.68.params \

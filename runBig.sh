@@ -1,5 +1,6 @@
 #!/bin/bash
 ./mt_gpu.exe \
+ --dynet-devices GPU:6 \
  --dynet-mem 1024 \
  --name big \
  -t ~/data_set/train/train.zh \

@@ -1,6 +1,6 @@
 #!/bin/bash
 ./mt_cpu.exe \
-  --dynet-devices GPU:6 \
+  --dynet-devices CPU \
   --dynet-mem 1024 \
   --name toy \
   -t ~/data_set/toyData/toy.zh \
