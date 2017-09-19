@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
   assert(training.size() == training_label.size());
 
   for (int i = 0; i < training.size(); i++) {
-    if (training[i].size() <= 0 || training_label[i].size() <= 0) continue;
+    if (training[i].size() <= 1 || training_label[i].size() <= 1) continue;
     if (training[i].size() > 50 || training_label[i].size() > 50) continue;
 	  train_data.push_back(pp(training[i], training_label[i]));
   }
