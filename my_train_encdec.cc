@@ -235,7 +235,7 @@ int main(int argc, char** argv) {
           for (int j = 0; j < res.size()-1 ; ++j) 
             ofs_dev_trans << dictOut.convert(res[j]) << " ";
           ofs_dev_trans << endl;
-          for (int j=0;j<30;j++) cerr << "\b";
+          for (int j = 0; j < 100; j++) cerr << "\b";
           cerr << "already translated " << i+1 << " sents. ";
         }
         cerr << endl << "translation completed... " << miss << " sents can't be translated...";
