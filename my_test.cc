@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   // Dictionary
   cerr << "Building dictionary..." << endl;
   XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
-  kEOS = 0; 
+  kEOS = 0; // depend on <dict.h>
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;

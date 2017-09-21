@@ -20,16 +20,20 @@ int fCountSize(const vector<vector<int>>& lines){
   return cnt;
 }
 
-void fGiveMask(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
+int fGiveMaskAndCntUnk(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
+  int cntUnk = 0;
   for (int i = 0; i < lines.size(); i++) {
     mask.push_back(vector<float>());
     assert(lines[i].size() >= 2);
     mask[i].push_back(1.);
+    if (line[i][0] == kUNK) cntUnk++;
     for (int j = 1; j < lines[i].size(); j++) {
       if (lines[i][j-1] != kEOS) mask[i].push_back(1.);
       else mask[i].push_back(0.);
+      if (line[i][j] == kUNK) cntUnk++
     }
   }
+  return cntUnk;
 }
 
 static void handleInt(int sig){
@@ -75,7 +79,6 @@ int main(int argc, char** argv) {
   // Dictionary
   cerr << "Building dictionary..." << endl;
   XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
-  kEOS = 0;
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;
@@ -126,10 +129,18 @@ int main(int argc, char** argv) {
   // Read validation dataset
   read_corpus(params.dev_file, "dev", dictIn, dev);
 
-  fGiveMask(training, train_mask);              
-  fGiveMask(training_label, train_label_mask); 
-  int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
-  cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
+  int cntTrainUnk = fGiveMaskAndCntUnk(training, train_mask);              
+  int cntTrainLabelUnk = fGiveMaskAndCntUnk(training_label, train_label_mask); 
+  //int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
+  //cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
+  double ratioTrain = 100.0 * cntTrainUnk / fCountSize(training);
+  double ratioTrainLabel = 100.0 * cntTrainLabelUnk / fCountSize(training_label);
+  cerr << "corpus processed successfully. " << endl;
+  cerr << "In training set, Dictionary cover " << setprecision(2) << ratioTrain << "%% words." << endl;
+  cerr << "In training_label set, Dictionary cover " << setprecision(2) << ratioTrainLabel << "%% words." << endl;
+
+  cerr << "corpus_test ended." << endl;
+  return 0;
 
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;

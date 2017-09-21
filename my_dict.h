@@ -8,6 +8,8 @@
 
 using namespace std;
 
+int kEOS = 0;
+int kUNK = 1;
 
 namespace XC {
 

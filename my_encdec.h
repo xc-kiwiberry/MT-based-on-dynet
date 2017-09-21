@@ -25,8 +25,6 @@
 using namespace std;
 using namespace dynet;
 
-int kEOS;
-
 unsigned SRC_VOCAB_SIZE; // depends on dict
 unsigned TGT_VOCAB_SIZE; // depends on dict
 
