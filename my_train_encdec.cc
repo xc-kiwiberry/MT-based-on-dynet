@@ -26,11 +26,11 @@ int fGiveMaskAndCntUnk(const vector<vector<int>>& lines, vector<vector<float>>& 
     mask.push_back(vector<float>());
     assert(lines[i].size() >= 2);
     mask[i].push_back(1.);
-    if (line[i][0] == kUNK) cntUnk++;
+    if (lines[i][0] == kUNK) cntUnk++;
     for (int j = 1; j < lines[i].size(); j++) {
       if (lines[i][j-1] != kEOS) mask[i].push_back(1.);
       else mask[i].push_back(0.);
-      if (line[i][j] == kUNK) cntUnk++
+      if (lines[i][j] == kUNK) cntUnk++
     }
   }
   return cntUnk;
