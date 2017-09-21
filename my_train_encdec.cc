@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
         delete iteration;
         iteration = new Timer("completed in");
         // multi-bleu
-        string cmd = "perl multi-bleu.perl " + 
+        string cmd = "perl ../multi-bleu.perl " + 
                params.dev_labels_file + " < .tmp_dev_trans > .tmp_bleu_res";
         system(cmd.c_str());
         // readin bleu score
