@@ -269,10 +269,13 @@ int main(int argc, char** argv) {
             << '_' << params.INPUT_DIM
             << '_' << params.HIDDEN_DIM 
             << ".params";
+        TextFileSaver saver("models//.tmp.params");
+        saver.save(model);
         if (best_bleu < cur_bleu){
           best_bleu = cur_bleu;
-          TextFileSaver saver(model_name_ss.str());
-          saver.save(model);
+          //TextFileSaver saver(model_name_ss.str());
+          //saver.save(model);
+          os.system("mv models/.tmp.params " + model_name_ss.str());
           cerr << "save model: " << model_name_ss.str() << " success." << endl;
         }
         cerr << endl;
