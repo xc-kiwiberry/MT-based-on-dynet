@@ -1,12 +1,6 @@
 #!/bin/bash
 g++ my_train_encdec.cc \
--o mt_gpu.exe \
--ldynet \
--std=c++11 \
--L/home/huangxuancheng/dynet/build/dynet
-
-g++ my_train_encdec.cc \
--o mt_cpu.exe \
+-o mt_train.exe \
 -ldynet \
 -std=c++11 \
 -L/home/huangxuancheng/dynet/build/dynet
