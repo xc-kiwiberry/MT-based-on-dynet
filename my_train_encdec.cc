@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
           best_bleu = cur_bleu;
           //TextFileSaver saver(model_name_ss.str());
           //saver.save(model);
-          os.system("mv models/.tmp.params " + model_name_ss.str());
+          system("mv models/.tmp.params " + model_name_ss.str());
           cerr << "save model: " << model_name_ss.str() << " success." << endl;
         }
         cerr << endl;
