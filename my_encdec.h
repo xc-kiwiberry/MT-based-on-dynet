@@ -28,6 +28,8 @@ using namespace dynet;
 unsigned SRC_VOCAB_SIZE; // depends on dict
 unsigned TGT_VOCAB_SIZE; // depends on dict
 
+int kEOS = 0;
+int kUNK = 1;
 
 template <class Builder>
 struct EncoderDecoder {
