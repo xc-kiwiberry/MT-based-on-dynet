@@ -3,7 +3,6 @@
 #include "my_cl-args.h"
 #include "my_dict.h"
 
-
 using namespace std;
 using namespace dynet;
 
@@ -20,9 +19,10 @@ int fCountSize(const vector<vector<int>>& lines){
   return cnt;
 }
 
-int fGiveMaskAndCntUnk(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
-  int cntUnk = 0;
+double fGiveMaskAndCalcCov(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
+  int cntUnk = 0, cntAll = 0;
   for (int i = 0; i < lines.size(); i++) {
+    cntAll += lines[i].size();
     mask.push_back(vector<float>());
     assert(lines[i].size() >= 2);
     mask[i].push_back(1.);
@@ -33,7 +33,7 @@ int fGiveMaskAndCntUnk(const vector<vector<int>>& lines, vector<vector<float>>& 
       if (lines[i][j] == kUNK) cntUnk++;
     }
   }
-  return cntUnk;
+  return 100. - 100.*cntUnk/cntAll;
 }
 
 static void handleInt(int sig){
@@ -129,24 +129,22 @@ int main(int argc, char** argv) {
   // Read validation dataset
   read_corpus(params.dev_file, "dev", dictIn, dev);
 
-  int cntTrainUnk = fGiveMaskAndCntUnk(training, train_mask);              
-  int cntTrainLabelUnk = fGiveMaskAndCntUnk(training_label, train_label_mask); 
+  double ratioTrain = fGiveMaskAndCntUnk(training, train_mask);              
+  double ratioTrainLabel = fGiveMaskAndCntUnk(training_label, train_label_mask); 
   //int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   //cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
-  double ratioTrain = 100.0 * cntTrainUnk / fCountSize(training);
-  double ratioTrainLabel = 100.0 * cntTrainLabelUnk / fCountSize(training_label);
   cerr << "corpus processed successfully. " << endl;
-  cerr << "In training set, Dictionary cover " << setprecision(2) << ratioTrain << "%% words." << endl;
-  cerr << "In training_label set, Dictionary cover " << setprecision(2) << ratioTrainLabel << "%% words." << endl;
+  cerr << "In training set, Dictionary covers " << setprecision(2) << ratioTrain << "% words." << endl;
+  cerr << "In training_label set, Dictionary covers " << setprecision(2) << ratioTrainLabel << "% words." << endl;
 
-  cerr << "corpus_test ended." << endl;
-  return 0;
+  //cerr << "corpus_test ended." << endl;
+  //return 0;
 
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;
   // Use adam optimizer
   AdamTrainer adam = AdamTrainer(model, 0.0005);
-  double slow_start = 0.998;
+  //double slow_start = 0.998;
 
   cerr << "create optimizer success." << endl;
 
@@ -272,6 +270,9 @@ int main(int argc, char** argv) {
         cerr << valid_info_ss.str();
         // save best model
         mkdir("models", 0755);
+        TextFileSaver saver("models//.tmp.params");
+        saver.save(model);
+
         ostringstream model_name_ss;
         model_name_ss 
             << "models//"
@@ -280,8 +281,6 @@ int main(int argc, char** argv) {
             << '_' << params.INPUT_DIM
             << '_' << params.HIDDEN_DIM 
             << ".params";
-        TextFileSaver saver("models//.tmp.params");
-        saver.save(model);
         if (best_bleu < cur_bleu){
           best_bleu = cur_bleu;
           //TextFileSaver saver(model_name_ss.str());
