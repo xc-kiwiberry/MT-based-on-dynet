@@ -129,8 +129,8 @@ int main(int argc, char** argv) {
   // Read validation dataset
   read_corpus(params.dev_file, "dev", dictIn, dev);
 
-  double ratioTrain = fGiveMaskAndCntUnk(training, train_mask);              
-  double ratioTrainLabel = fGiveMaskAndCntUnk(training_label, train_label_mask); 
+  double ratioTrain = fGiveMaskAndCalcCov(training, train_mask);              
+  double ratioTrainLabel = fGiveMaskAndCalcCov(training_label, train_label_mask); 
   //int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   //cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
   cerr << "corpus processed successfully. " << endl;
