@@ -1,5 +1,5 @@
 #!/bin/bash
-./mt_train.exe \
+./mt_train.executable \
   --dynet-devices CPU \
   --dynet-mem 1024 \
   --name toy \

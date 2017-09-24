@@ -1,5 +1,5 @@
 #!/bin/bash
-./mt_test.exe \
+./mt_test.executable \
  --dynet-devices CPU \
  --dynet-mem 1024 \
  --name toytest \

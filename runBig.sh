@@ -1,5 +1,5 @@
 #!/bin/bash
-./mt_train.exe \
+./mt_train.executable \
  --dynet-devices GPU:6 \
  --dynet-mem 1024 \
  --name big \
