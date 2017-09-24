@@ -28,8 +28,8 @@ using namespace dynet;
 unsigned SRC_VOCAB_SIZE; // depends on dict
 unsigned TGT_VOCAB_SIZE; // depends on dict
 
-int kEOS = 0;
-int kUNK = 1;
+const int kEOS = 0;
+const int kUNK = 1;
 
 template <class Builder>
 struct EncoderDecoder {
@@ -386,6 +386,6 @@ public:
         //    cout << "cannot find translation in beam size " << beam_size << " try " << beam_size*2 << endl;
         //    return generate(encoded, oslen, cg, beam_size*2);
         //}
-    }//*/
+    }
 
 };

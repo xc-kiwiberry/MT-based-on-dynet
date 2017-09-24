@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   // Dictionary
   cerr << "Building dictionary..." << endl;
   XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
-  kEOS = 0; // depend on <dict.h>
+
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
   }
   cerr << "translation finished. " << miss << " sents can't translate in beam_size 10." << endl;
 
-  string cmd = "perl multi-bleu.perl " + params.test_labels_file 
+  string cmd = "perl ../multi-bleu.perl " + params.test_labels_file 
                   + " < " + trans_out_ss.str() 
                   + " > " + "test//" + params.exp_name + ".bleu_res";
   system(cmd.c_str());
