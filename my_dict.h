@@ -87,7 +87,7 @@ public:
 
 };
 
-void read_corpus(const string &fileName, const string varName, XC::Dict &dict, vector<vector<int>>& vec){
+void read_corpus(const string &fileName, const string varName, Dict &dict, vector<vector<int>>& vec){
   string line;
   int line_cnt = 0;
   int token_cnt = 0;
