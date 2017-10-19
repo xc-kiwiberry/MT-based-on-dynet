@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
   // Dictionary
   cerr << "Building dictionary..." << endl;
-  XC::Dict dictIn(params.train_file, params.SRC_DIC_SIZE), dictOut(params.train_labels_file, params.TGT_DIC_SIZE);
+  Dict dictIn(params.train_file, params.SRC_DIC_SIZE), dictOut(params.train_labels_file, params.TGT_DIC_SIZE);
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;

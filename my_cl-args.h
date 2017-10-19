@@ -201,7 +201,7 @@ void get_args(int argc,
         abort();
       }
       istringstream d(argv[i + 1]);
-      d >> params.mrt_enbale;
+      d >> params.mrt_enable;
       i++;
     } else if (arg == "--src_dic_size") {
       if (i + 1 == argc) {
