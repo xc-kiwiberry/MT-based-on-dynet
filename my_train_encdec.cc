@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   for (int i=1;i<=24;i++) v.push_back(i);
   Expression x = input(g, Dim({2,3}, 4), v);
   print_dim(x.dim());
-  x=x.transpose();
+  x=transpose(x);
   print_dim(x.dim());
   debug(as_vector(x.value()));
   return 0;//*/
@@ -211,11 +211,11 @@ int main(int argc, char** argv) {
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
-        Expression loss_expr = lm.decode(encoding_batched, hyp_sents, hyp_masks, 0, y.size(), cg);
+        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, y.size(), cg);
         // 计算mrt_loss
-        ...
+        //...
         // 
-        cg.backward(...);
+        //cg.backward(...);
         adam.update();
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
