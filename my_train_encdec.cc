@@ -186,6 +186,11 @@ int main(int argc, char** argv) {
   //cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
+  if (params.mrt_enable){
+    cerr << "params.mrt_sampleSize = " << params.mrt_sampleSize << endl;
+    cerr << "params.mrt_lenRatio = " << params.mrt_lenRatio << endl;
+    cerr << "params.mrt_alpha = " << params.mrt_alpha << endl;
+  }
 
   // Number of batches in training set
   unsigned num_batches = training.size() / params.BATCH_SIZE;
