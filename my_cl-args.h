@@ -109,7 +109,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.dev_labels_file;
       i++;
-    } /*else if (arg == "--dict" || arg == "-dic") {
+    } /*else if (arg == "--dict") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -198,7 +198,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.debug_info;
       i++;
-    } else if (arg == "--mrt_enbale") {
+    } else if (arg == "--mrt_enable") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
