@@ -81,7 +81,11 @@ int main(int argc, char** argv) {
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
   //Params params;
   get_args(argc, argv, params, TRAIN);
-  if (params.mrt_enable) params.BATCH_SIZE = 1;
+  if (params.mrt_enable) {
+    cerr << "Training criteria is MRT." << endl;
+    params.BATCH_SIZE = 1;
+  }
+  else cerr << "Training criteria is MLE." << endl;
   // Load datasets ---------------------------------------------------------------------------------
 
   // Dictionary
