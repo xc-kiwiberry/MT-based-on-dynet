@@ -442,7 +442,7 @@ public:
 
             // ramdom sample
             vector<float> randomNum = as_vector(random_uniform(cg, {params.mrt_sampleSize}, 0.0, 1.0).value());
-            vector<int> ids;
+            vector<unsigned> ids;
             for (int i = 0; i < params.mrt_sampleSize; i++){
                 for (int j = i*TGT_VOCAB_SIZE; j < (i+1)*TGT_VOCAB_SIZE; j++){
                     randomNum[i] -= probs[j];
