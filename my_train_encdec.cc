@@ -142,8 +142,8 @@ int main(int argc, char** argv) {
   //int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
   //cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
   cerr << "corpus processed successfully. " << endl;
-  cerr << "In training set, Dictionary covers " << setprecision(2) << ratioTrain << "% words." << endl;
-  cerr << "In training_label set, Dictionary covers " << setprecision(2) << ratioTrainLabel << "% words." << endl;
+  cerr << "In training set, Dictionary covers " << setprecision(3) << ratioTrain << "% words." << endl;
+  cerr << "In training_label set, Dictionary covers " << setprecision(3) << ratioTrainLabel << "% words." << endl;
 
   //cerr << "corpus_test ended." << endl;
   //return 0;
@@ -196,13 +196,13 @@ int main(int argc, char** argv) {
   int cnt_batches = 1;
   double best_bleu = 0;
   // Initialize loss 
-  	double loss = 0;
-  	double sum_loss = 0;
+  double loss = 0;
+  double sum_loss = 0;
   // Start timer
-    Timer* iteration = new Timer("completed in");
-    cerr << endl << "start training" << endl;
+  Timer* iteration = new Timer("completed in");
+  cerr << endl << "start training" << endl;
   // register signal 
-    signal(SIGINT, handleInt);
+  signal(SIGINT, handleInt);
 
   // Run indefinitely
   while (true) {
@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
       if (params.mrt_enable){ // MRT
         ComputationGraph cg;
         vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
-        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), params, cg);
+        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), cg);
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);

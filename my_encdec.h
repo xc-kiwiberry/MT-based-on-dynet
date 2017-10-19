@@ -129,11 +129,8 @@ public:
         
         // Run the forward encoder on the batch
         for (int t = 0; t < islen; ++t) {
-
             Expression i_back = fwd_enc_builder.add_input(i_x_t[t]);
-
             fwd_vectors.push_back(i_back);
-
         }
 
         // Backward encoder ------------------------------------------------------------------------
@@ -147,13 +144,9 @@ public:
         Expression last_h = zeroes(cg, Dim({HIDDEN_DIM}, bsize));
         
         for (int t = islen - 1; t >= 0; --t) {
-
             Expression i_back = bwd_enc_builder.add_input(i_x_t[t]);
-
             Expression now_h = cmult(i_back, mask[t]) + cmult(last_h, (1-mask[t]));
-            
             bwd_vectors.push_back(now_h);
-            
             last_h = now_h;
         }
 
@@ -399,8 +392,7 @@ public:
      *  get some samples for MRT training
      */
     vector<vector<int>> sample(const vector<Expression>& encoded, 
-                    const unsigned& src_len,
-                    const Params& params,
+                    const unsigned& ref_len,
                     ComputationGraph & cg) {
 
         // parameter
@@ -429,7 +421,7 @@ public:
         
         vector<vector<int>> hyp_sents(params.mrt_sampleSize, vector<int>());
 
-        unsigned sample_lenth = params.mrt_lenRatio * src_len;
+        unsigned sample_lenth = params.mrt_lenRatio * ref_len;
         for (int t = 0; t < sample_lenth; ++t) {
             Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
             Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
