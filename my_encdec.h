@@ -253,7 +253,7 @@ public:
         Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
         Expression i_err = pickneglogsoftmax(prob_vocab, y_t);
         Expression mask = input(cg, Dim({1}, bsize * oslen), y_m);
-
+            // 考虑如何 reshape？已经把所有的搞成batched了，怎么搞成每句分开？
         // Sum loss over batch
         return sum_batches(cmult(i_err, mask))/(float)bsize;
     }
@@ -273,16 +273,22 @@ public:
         }
         return id;
     }
+
     /**
      * Generate a sentence from an input sentence
      */
     vector<unsigned> generate(const vector<int>& insent, int& miss, ComputationGraph & cg) {
         return generate(encode(insent, cg), 3 * insent.size() - 1, miss, cg);
     }
+
     /**
      * Generate a sentence from an encoding
      */
-    vector<unsigned> generate(const vector<Expression>& encoded, const unsigned& oslen, int& miss, ComputationGraph & cg, int beam_size = 10) {
+    vector<unsigned> generate(const vector<Expression>& encoded, 
+                            const unsigned& oslen, 
+                            int& miss, 
+                            ComputationGraph & cg, 
+                            int beam_size = 10) {
 
         // parameter
         Expression hid2hid = parameter(cg, p_hid2hid);
@@ -388,4 +394,71 @@ public:
         //}
     }
 
+    /**
+     *  get some samples for MRT training
+     */
+    vector<vector<int>> sample(const vector<Expression>& encoded, 
+                    const unsigned& src_len,
+                    //const vector<int>& ref_sent, 
+                    //vector<vector<int>>& hyp_sents, 
+                    //vector<vector<float>>& hyp_masks, 
+                    //vector<float>& hyp_bleu,
+                    ComputationGraph & cg) {
+
+        // parameter
+        Expression hid2hid = parameter(cg, p_hid2hid);
+        Expression b_hid = parameter(cg, p_b_hid);
+
+        Expression readout_allthree = parameter(cg, p_readout_allthree);
+        Expression readout_offset = parameter(cg, p_readout_offset);
+
+        Expression hid2voc = parameter(cg, p_emb2voc) * parameter(cg, p_hid2emb);
+        Expression b_voc = parameter(cg, p_b_voc);
+
+        // encoded info
+        Expression input_mat = encoded[1]; // (2*hidden_dim,|F|)
+        Expression w1 = parameter(cg, attention_w1);
+        Expression w1dt = w1 * input_mat;
+
+        Expression init = tanh(affine_transform({b_hid, hid2hid, encoded[0]})); 
+        
+        // init dec_builder
+        dec_builder.new_graph(cg);
+        dec_builder.start_new_sequence(vector<Expression>(1, init));
+        
+        // zero embedding
+        Expression last_output_embeddings = zeroes(cg, Dim({INPUT_DIM}, params.mrt_sampleSize));
+        
+        vector<vector<int>> hyp_sents(params.mrt_sampleSize, vector<int>());
+
+        unsigned sample_lenth = params.mrt_lenRatio * src_len;
+        for (int t = 0; t < sample_lenth; ++t) {
+            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
+            Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
+            Expression i_r_t = affine_transform({readout_offset, 
+                                                readout_allthree, concat_vector});
+
+            Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
+            vector<float> probs = as_vector(softmax(prob_vocab).value()); 
+
+            // ramdom sample
+            vector<float> randomNum = as_vector(random_uniform(cg, {params.mrt_sampleSize}, 0.0, 1.0).value());
+            vector<int> ids;
+            for (int i = 0; i < params.mrt_sampleSize; i++){
+                for (int j = i*TGT_VOCAB_SIZE; j < (i+1)*TGT_VOCAB_SIZE; j++){
+                    randomNum[i] -= probs[j];
+                    if (randomNum[i]<=0){
+                        ids.push_back(j % TGT_VOCAB_SIZE);
+                        hyp_sents[i].push_back(j % TGT_VOCAB_SIZE);
+                        break;
+                    }
+                }
+            }
+
+            last_output_embeddings = lookup(cg, p_c, ids);
+            dec_builder.add_input( concatenate({context, last_output_embeddings}) );
+        }
+
+        return hyp_sents;
+    }
 };

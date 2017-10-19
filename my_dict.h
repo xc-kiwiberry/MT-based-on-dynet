@@ -5,15 +5,14 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 using namespace std;
-
-namespace XC {
 
 class Dict {
 
 private:
-  const int _limit = 30000;
+  const int _limit;
   vector<string> _words;
   unordered_map<string, int> _word2id;
 
@@ -23,7 +22,7 @@ private:
   }
 
 public:
-  Dict(const string& fileName) {
+  Dict(const string& fileName, const int limit): _limit(limit) {
 
     _word2id.clear();
 
@@ -88,8 +87,6 @@ public:
 
 };
 
-}
-
 void read_corpus(const string &fileName, const string varName, XC::Dict &dict, vector<vector<int>>& vec){
   string line;
   int line_cnt = 0;
@@ -107,5 +104,102 @@ void read_corpus(const string &fileName, const string varName, XC::Dict &dict, v
   cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
 }
 
+vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent,const int n = 4) {
+  // ref_dic
+  unordered_map<vector<int>, int> ref_dic;
+  for (int j = 0; j < ref_sent.size()-1; j++){
+      vector<int> tmp;
+      for (int k = 0; k < n && j+k < ref_sent.size()-1; k++){
+        tmp.push_back(ref_sent[j+k]);
+        ref_dic[tmp]++;
+      }
+    }
+  }
+  vector<float> final_bleu;
+  // each sample
+  for (int i = 0; i < sample_sents.size(); i++){
+    vector<int>& hyp_sent = sample_sents[i];
+    vector<int>cnt(n,0);
+    unordered_map<vector<int>, int> hyp_dic;
+    for (int j = 0; j < hyp_sent.size()-1; j++){
+      vector<int> tmp;
+      for (int k = 0; k < n && j+k < hyp_sent.size()-1; k++){
+        tmp.push_back(hyp_sent[j+k]);
+        hyp_dic[tmp]++;
+      }
+    }
+    for (auto pr: hyp_dic){
+      auto it = ref_dic.find(pr.first);
+      if (it != ref_dic.end()){
+        cnt[pr.first.size()-1] += min(pr.second, it->second);
+      }
+    }
+    vector<float> bleu(n,0);
+    int smooth = 0;
+    for (int j = 0; j < n; j++){
+      if (0 == cnt[j]) smooth = 1;
+    }
+    for (int j = 0; j < n; j++){
+      if (hyp_sent.size()-1 > j)
+        bleu[j] = 1. * (cnt[j] + smooth) / (hyp_sent.size()-1 - j + smooth);
+      else
+        bleu[j] = 1.
+    }
+    float brev_penalty = 1.;
+    if (hyp_sent.size() < ref_sent.size())
+      brev_penalty = exp(1 - 1. * (ref_sent.size()-1) / (hyp_sent.size()-1) );
+    float logsum = 0.;
+    for (int j = 0; j < n; j++)
+      logsum += log(bleu[j]);
+    final_bleu.push_back(brev_penalty * exp(logsum/n));
+  }
+  return final_bleu;
+}
+
+void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, vector<vector<float>>& hyp_masks, vector<float>& hyp_bleu){
+  // del padding
+  for (auto& sent: hyp_sents){
+    for (int i = 0; i < sent.size(); i++){
+      if (kEOS == sent[i]){
+        sent.erase(sent.begin()+i, sent.end());
+        break;
+      }
+    }
+    sent.push_back(kEOS);
+  }
+  // unique
+  sort(hyp_sents.begin(), hyp_sents.end());
+  hyp_sents.erase( unique(hyp_sents.begin(), hyp_sents.end()), hyp_sents.end() );
+  for (auto& sent: hyp_sents){
+    if (kEOS == sent[0]) {
+      hyp_sents.erase(sent);
+      break;
+    }
+  }
+  // calc bleu
+  hyp_bleu = calcBleu(hyp_sents, ref_sent);
+  // add ref_sent to hyp_sents
+  hyp_bleu.push_back(1.0);
+  hyp_sents.push_back(ref_sent);
+  // add padding
+  unsigned maxLength = 0;
+  for (auto& sent: hyp_sents){
+    maxLength = max(maxLength, sent.size());
+  }
+  for (auto& sent: hyp_sents){
+    while(sent.size() < maxLength)
+      sent.push_back(kEOS);
+  }
+  // mask
+  for (int i = 0; i < hyp_sents.size(); i++){
+    hyp_masks.push_back(vector<float>());
+    hyp_masks[i].push_back(1.);
+    for (int j = 1; j < hyp_sents[i].size(); j++){
+      if (kEOS == hyp_sents[i][j-1]) hyp_masks[i].push_back(0.);
+      else hyp_masks[i].push_back(1.);
+    }
+  }
+  return ;
+}
 
 #endif

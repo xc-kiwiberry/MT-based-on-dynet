@@ -25,7 +25,7 @@ struct Params {
   string test_labels_file = "";
 
   string model_file = "";
-  string dic_file = "";
+  //string dic_file = "";
 
   // default Hyperparameters
   unsigned LAYERS = 1;
@@ -33,10 +33,22 @@ struct Params {
   unsigned HIDDEN_DIM = 4;
   unsigned ATTENTION_SIZE = 32;
   unsigned BATCH_SIZE = 1;
+
+  unsigned SRC_DIC_SIZE = 30000;
+  unsigned TGT_DIC_SIZE = 30000;
+
   unsigned print_freq = 1000;
   unsigned save_freq = 10000;
+
   bool debug_info = false;
-};
+
+  // MRT
+  bool mrt_enable = false;
+  double mrt_lenRatio = 1.5;
+  unsigned mrt_sampleSize = 100;
+  double mrt_alpha = 0.005;
+
+}params;
 
 /**
  * \brief Get parameters from command line arguments
@@ -94,7 +106,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.dev_labels_file;
       i++;
-    } else if (arg == "--dict" || arg == "-dic") {
+    } /*else if (arg == "--dict" || arg == "-dic") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -102,7 +114,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.dic_file;
       i++;
-    } else if (arg == "--test" || arg == "-ts") {
+    } */else if (arg == "--test" || arg == "-ts") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -159,7 +171,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.BATCH_SIZE;
       i++;
-    } else if (arg == "--print_freq" || arg == "-pf") {
+    } else if (arg == "--print_freq") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -167,7 +179,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.print_freq;
       i++;
-    } else if (arg == "--save_freq" || arg == "-sf") {
+    } else if (arg == "--save_freq") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -175,13 +187,37 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.save_freq;
       i++;
-    } else if (arg == "--debug_info" || arg == "-di") {
+    } else if (arg == "--debug_info") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
       }
       istringstream d(argv[i + 1]);
       d >> params.debug_info;
+      i++;
+    } else if (arg == "--mrt_enbale") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.mrt_enbale;
+      i++;
+    } else if (arg == "--src_dic_size") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.SRC_DIC_SIZE;
+      i++;
+    } else if (arg == "--tgt_dic_size") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.TGT_DIC_SIZE;
       i++;
     } 
     i++;

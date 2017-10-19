@@ -52,33 +52,39 @@ void debug(const vector<float>& v) {
     cerr <<endl;
 } 
 
+void print_dim(const Dim& d){
+  cout<<"({"<<d.d[0];
+  for (int i=1;i<d.nd;i++){
+    cout<<","<<d.d[i];
+  }
+  cout<<"},"<<d.bd<<"}"<<endl;
+}
+
 int main(int argc, char** argv) {
   // Fetch dynet params ----------------------------------------------------------------------------
   auto dyparams = dynet::extract_dynet_params(argc, argv);
   dynet::initialize(dyparams);
 
   // debug
-  /*
+  ///*
   ComputationGraph g;
-  vector<float> v = {6,7,8,9};
-  Expression x = input(g, Dim({1}, 4), v);
+  vector<float> v;
+  for (int i=1;i<=24,i++) v.push_back(i);
+  Expression x = input(g, Dim({2,3}, 4), v);
+  print_dim(x.dim());
+  x=x.transpose();
+  print_dim(x.dim());
   debug(as_vector(x.value()));
-  Expression y = pick_batch_elems(x, {2,2,3,1});
-  debug(as_vector(y.value()));
-  x=x*2;
-  debug(as_vector(x.value()));
-  y=y*2;
-  debug(as_vector(y.value()));
   return 0;//*/
 
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
-  Params params;
   get_args(argc, argv, params, TRAIN);
+  if (params.mrt_enable) params.BATCH_SIZE = 1;
   // Load datasets ---------------------------------------------------------------------------------
 
   // Dictionary
   cerr << "Building dictionary..." << endl;
-  XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
+  XC::Dict dictIn(params.train_file, params.SRC_DIC_SIZE), dictOut(params.train_labels_file, params.TGT_DIC_SIZE);
   SRC_VOCAB_SIZE = dictIn.size();
   TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;
@@ -169,7 +175,7 @@ int main(int argc, char** argv) {
   cerr << "params.INPUT_DIM = " << params.INPUT_DIM << endl;
   cerr << "params.HIDDEN_DIM = " << params.HIDDEN_DIM << endl;
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
-  cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
+  //cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
 
@@ -182,7 +188,7 @@ int main(int argc, char** argv) {
   srand(time(0));
   random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
-  int epoch = 0;
+  //int epoch = 0;
   int cnt_batches = 1;
   double best_bleu = 0;
   // Initialize loss 
@@ -198,7 +204,23 @@ int main(int argc, char** argv) {
   while (true) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
-      if (true) {
+      if (params.mrt_enable){ // MRT
+        ComputationGraph cg;
+        vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
+        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), cg);
+        vector<vector<float>> hyp_masks;
+        vector<float> hyp_bleu;
+        getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
+        Expression loss_expr = lm.decode(encoding_batched, hyp_sents, hyp_masks, 0, y.size(), cg);
+        // 计算mrt_loss
+        ...
+        // 
+        cg.backward(...);
+        adam.update();
+        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
+        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+      }
+      else { // MLE
         // build graph for this instance
         ComputationGraph cg;
         // Compute batch start id and size
@@ -272,7 +294,6 @@ int main(int argc, char** argv) {
         mkdir("models", 0755);
         TextFileSaver saver("models//.tmp.params");
         saver.save(model);
-
         ostringstream model_name_ss;
         model_name_ss 
             << "models//"
