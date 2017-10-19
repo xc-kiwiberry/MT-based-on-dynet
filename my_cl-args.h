@@ -41,10 +41,10 @@ struct Params {
   unsigned print_freq = 1000;
   unsigned save_freq = 10000;
 
-  bool debug_info = false;
+  int debug_info = false;
 
   // MRT
-  bool mrt_enable = false;
+  int mrt_enable = false;
   float mrt_lenRatio = 1.5;
   unsigned mrt_sampleSize = 100;
   float mrt_alpha = 0.005;
