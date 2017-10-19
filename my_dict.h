@@ -190,7 +190,7 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
   // add padding
   unsigned maxLength = 0;
   for (auto& sent: hyp_sents){
-    maxLength = max(maxLength, (int)sent.size());
+    maxLength = max(maxLength, (unsigned)sent.size());
   }
   for (auto& sent: hyp_sents){
     while(sent.size() < maxLength)
