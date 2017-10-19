@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
-        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, y.size(), cg);
+        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, hyp_sents.size(), cg);
         // 计算mrt_loss
         //...
         // 
