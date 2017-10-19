@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
   //Params params;
   get_args(argc, argv, params, TRAIN);
-  cerr << "mrt_enable="<<mrt_enable<<endl;
+  cerr << "mrt_enable="<<params.mrt_enable<<endl;
   if (0 != params.mrt_enable) {
     cerr << "Training criteria is MRT." << endl;
     params.BATCH_SIZE = 1;
