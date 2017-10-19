@@ -1,7 +1,5 @@
 
 #include "my_encdec.h"
-#include "my_cl-args.h"
-#include "my_dict.h"
 #include "stdlib.h"
 
 using namespace std;
@@ -21,10 +19,10 @@ int main(int argc, char** argv) {
 
   // Dictionary
   cerr << "Building dictionary..." << endl;
-  XC::Dict dictIn(params.train_file), dictOut(params.train_labels_file);
+  Dict dictIn(params.train_file, params.SRC_DIC_LIM), dictOut(params.train_labels_file, params.TGT_DIC_LIM);
 
-  SRC_VOCAB_SIZE = dictIn.size();
-  TGT_VOCAB_SIZE = dictOut.size();
+  unsigned SRC_VOCAB_SIZE = dictIn.size();
+  unsigned TGT_VOCAB_SIZE = dictOut.size();
   cerr << "Dictionary build success." << endl;
   cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
   cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
@@ -43,7 +41,9 @@ int main(int argc, char** argv) {
                                  params.LAYERS,
                                  params.INPUT_DIM,
                                  params.HIDDEN_DIM,
-                                 params.ATTENTION_SIZE);
+                                 params.ATTENTION_SIZE,
+                                 SRC_VOCAB_SIZE,
+                                 TGT_VOCAB_SIZE);
 
   // Load model ---------------------------------------------------------------------------------
   TextFileLoader loader(params.model_file);

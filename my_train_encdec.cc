@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
   ///*
   ComputationGraph g;
   vector<float> v;
-  for (int i=1;i<=24,i++) v.push_back(i);
+  for (int i=1;i<=24;i++) v.push_back(i);
   Expression x = input(g, Dim({2,3}, 4), v);
   print_dim(x.dim());
   x=x.transpose();
