@@ -223,10 +223,12 @@ int main(int argc, char** argv) {
         loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
         loss_expr = sum_elems(loss_expr);
         loss_expr = reshape(loss_expr, {sampleNum});
+        
         loss_expr = loss_expr * params.mrt_alpha;
-        loss_expr = loss_expr - min_elems(loss_expr);
+        vector<float> tmp = as_vector(loss_expr.value());
+        loss_expr = loss_expr - (*min_elemnt(tmp.begin(), tmp.end()));
         loss_expr = exp(-loss_expr); 
-        loss_expr = loss_expr / sum_elems(loss_expr);
+        loss_expr = loss_expr / as_scalar(sum_elems(loss_expr).value());
         loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
         loss_expr = -sum_elems(loss_expr);
 
