@@ -216,10 +216,11 @@ int main(int argc, char** argv) {
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
         unsigned sampleNum = hyp_sents.size();
+        unsigned sentLen = hyp_sents[0].size();
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
-        loss_expr = reshape(loss_expr, {sampleNum, len});
+        loss_expr = reshape(loss_expr, {sampleNum, sentLen});
         loss_expr = transpose(loss_expr);
-        loss_expr = reshape(loss_expr, Dim({len}, sampleNum));
+        loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
         loss_expr = sum_elems(loss_expr);
         loss_expr = reshape(loss_expr, {sampleNum});
         loss_expr = loss_expr * params.mrt_alpha;
@@ -235,7 +236,7 @@ int main(int argc, char** argv) {
         double loss_this_time = as_scalar(cg.forward(loss_expr));
         loss += loss_this_time;
         sum_loss += loss_this_time;
-        
+
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
       }
