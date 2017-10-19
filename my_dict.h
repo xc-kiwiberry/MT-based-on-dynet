@@ -122,7 +122,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
   vector<float> final_bleu;
   // each sample
   for (int i = 0; i < sample_sents.size(); i++){
-    vector<int>& hyp_sent = sample_sents[i];
+    const vector<int>& hyp_sent = sample_sents[i];
     vector<int>cnt(n,0);
     unordered_map<string, int> hyp_dic[n];
     for (int j = 0; j < hyp_sent.size()-1; j++){
