@@ -6,9 +6,11 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
-#include "my_encdec.h"
 
 using namespace std;
+
+const int kEOS = 0;
+const int kUNK = 1;
 
 class Dict {
 

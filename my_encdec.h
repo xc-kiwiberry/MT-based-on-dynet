@@ -9,8 +9,8 @@
 #include "dynet/gru.h"
 #include "dynet/io.h"
 
-#include "my_cl-args.h"
 #include "my_dict.h"
+#include "my_cl-args.h"
 
 #include <random>
 #include <iostream>
@@ -28,13 +28,9 @@
 using namespace std;
 using namespace dynet;
 
-unsigned SRC_VOCAB_SIZE; // depends on dict
-unsigned TGT_VOCAB_SIZE; // depends on dict
-
-const int kEOS = 0;
-const int kUNK = 1;
-
-Params params;
+extern const int kEOS;
+extern const int kUNK;
+extern Params params;
 
 template <class Builder>
 struct EncoderDecoder {
@@ -44,6 +40,8 @@ private:
     unsigned INPUT_DIM;
     unsigned HIDDEN_DIM;
     unsigned ATTENTION_SIZE;
+    unsigned SRC_VOCAB_SIZE;
+    unsigned TGT_VOCAB_SIZE;
 
     Builder dec_builder;     // GRU
     Builder fwd_enc_builder;
@@ -73,8 +71,11 @@ public:
                             unsigned num_layers,
                             unsigned input_dim,
                             unsigned hidden_dim,
-                            unsigned attention_size) :
+                            unsigned attention_size,
+                            unsigned src_vocab_size,
+                            unsigned tgt_vocab_size) :
         LAYERS(num_layers), INPUT_DIM(input_dim), HIDDEN_DIM(hidden_dim), ATTENTION_SIZE(attention_size),
+        SRC_VOCAB_SIZE(src_vocab_size), TGT_VOCAB_SIZE(tgt_vocab_size),
         dec_builder(num_layers, input_dim + hidden_dim * 2, hidden_dim, model),
         fwd_enc_builder(num_layers, input_dim, hidden_dim, model),
         bwd_enc_builder(num_layers, input_dim, hidden_dim, model) {

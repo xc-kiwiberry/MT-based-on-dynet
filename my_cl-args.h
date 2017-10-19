@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
-#include "my_encdec.h"
 
 enum Task {
   TRAIN, 
@@ -37,8 +36,8 @@ struct Params {
   unsigned ATTENTION_SIZE = 32;
   unsigned BATCH_SIZE = 1;
 
-  unsigned SRC_DIC_SIZE = 30000;
-  unsigned TGT_DIC_SIZE = 30000;
+  unsigned SRC_DIC_LIM = 30000;
+  unsigned TGT_DIC_LIM = 30000;
 
   unsigned print_freq = 1000;
   unsigned save_freq = 10000;
@@ -51,7 +50,9 @@ struct Params {
   unsigned mrt_sampleSize = 100;
   double mrt_alpha = 0.005;
 
-};
+}params;
+
+extern Params params;
 
 /**
  * \brief Get parameters from command line arguments
@@ -206,21 +207,21 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.mrt_enable;
       i++;
-    } else if (arg == "--src_dic_size") {
+    } else if (arg == "--src_dic_lim") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
       }
       istringstream d(argv[i + 1]);
-      d >> params.SRC_DIC_SIZE;
+      d >> params.SRC_DIC_LIM;
       i++;
-    } else if (arg == "--tgt_dic_size") {
+    } else if (arg == "--tgt_dic_lim") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
       }
       istringstream d(argv[i + 1]);
-      d >> params.TGT_DIC_SIZE;
+      d >> params.TGT_DIC_LIM;
       i++;
     } 
     i++;
