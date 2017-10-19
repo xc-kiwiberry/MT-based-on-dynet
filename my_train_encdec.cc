@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   dynet::initialize(dyparams);
 
   // debug
-  ///*
+  /*
   ComputationGraph g;
   vector<float> v;
   for (int i=1;i<=24;i++) v.push_back(i);
@@ -218,6 +218,7 @@ int main(int argc, char** argv) {
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
+        
         loss_expr = reshape(loss_expr, {sampleNum, sentLen});
         loss_expr = transpose(loss_expr);
         loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
