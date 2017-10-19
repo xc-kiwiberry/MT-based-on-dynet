@@ -113,11 +113,10 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
   // ref_dic
   unordered_map<string, int> ref_dic[n];
   for (int j = 0; j < ref_sent.size()-1; j++){
-      string tmp = "";
-      for (int k = 0; k < n && j+k < ref_sent.size()-1; k++){
-        tmp += " " + string(ref_sent[j+k]);
-        ref_dic[k][tmp]++;
-      }
+    string tmp = "";
+    for (int k = 0; k < n && j+k < ref_sent.size()-1; k++){
+      tmp += " " + to_string(ref_sent[j+k]);
+      ref_dic[k][tmp]++;
     }
   }
   vector<float> final_bleu;
@@ -129,7 +128,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
     for (int j = 0; j < hyp_sent.size()-1; j++){
       string tmp = "";
       for (int k = 0; k < n && j+k < hyp_sent.size()-1; k++){
-        tmp += " " + string(hyp_sent[j+k]);
+        tmp += " " + to_string(hyp_sent[j+k]);
         hyp_dic[k][tmp]++;
       }
     }
