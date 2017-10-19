@@ -1,3 +1,5 @@
+#ifndef MY_CL_ARGS_H 
+#define MY_CL_ARGS_H 
 
 #include <iostream>
 #include <stdlib.h>
@@ -238,3 +240,5 @@ void get_args(int argc,
   }
 
 }
+
+#endif

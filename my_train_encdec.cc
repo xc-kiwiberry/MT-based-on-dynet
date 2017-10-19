@@ -1,6 +1,6 @@
-
 #include "my_encdec.h"
-
+#include "my_cl-args.h"
+#include "my_dict.h"
 
 using namespace std;
 using namespace dynet;
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   return 0;//*/
 
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
-  Params params;
+  //Params params;
   get_args(argc, argv, params, TRAIN);
   if (params.mrt_enable) params.BATCH_SIZE = 1;
   // Load datasets ---------------------------------------------------------------------------------

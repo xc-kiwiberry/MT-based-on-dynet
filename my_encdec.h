@@ -34,6 +34,8 @@ unsigned TGT_VOCAB_SIZE; // depends on dict
 const int kEOS = 0;
 const int kUNK = 1;
 
+Params params;
+
 template <class Builder>
 struct EncoderDecoder {
 private:
@@ -462,3 +464,4 @@ public:
         return hyp_sents;
     }
 };
+

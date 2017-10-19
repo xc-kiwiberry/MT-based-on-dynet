@@ -1,3 +1,6 @@
+#ifndef MY_DICT_H 
+#define MY_DICT_H 
+
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -199,3 +202,4 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
   return ;
 }
 
+#endif
