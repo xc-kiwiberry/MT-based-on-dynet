@@ -149,7 +149,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
       if (hyp_sent.size()-1 > j)
         bleu[j] = 1. * (cnt[j] + smooth) / (hyp_sent.size()-1 - j + smooth);
       else
-        bleu[j] = 1.
+        bleu[j] = 1.;
     }
     float brev_penalty = 1.;
     if (hyp_sent.size() < ref_sent.size())
@@ -176,9 +176,9 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
   // unique
   sort(hyp_sents.begin(), hyp_sents.end());
   hyp_sents.erase( unique(hyp_sents.begin(), hyp_sents.end()), hyp_sents.end() );
-  for (auto& sent: hyp_sents){
-    if (kEOS == sent[0]) {
-      hyp_sents.erase(sent);
+  for (int i = 0; i < hyp_sents.size(); i++){
+    if (kEOS == hyp_sents[i][0]) {
+      hyp_sents.erase(hyp_sents.begin()+i);
       break;
     }
   }
