@@ -69,7 +69,11 @@ int main(int argc, char** argv) {
   for (int i=1;i<=24;i++) v.push_back(i);
   Expression x = input(g, Dim({2,3}, 4), v);
   print_dim(x.dim());
+  debug(as_vector(x.value()));
   x=transpose(x);
+  print_dim(x.dim());
+  debug(as_vector(x.value()));
+  x=sum(x);
   print_dim(x.dim());
   debug(as_vector(x.value()));
   return 0;//*/
