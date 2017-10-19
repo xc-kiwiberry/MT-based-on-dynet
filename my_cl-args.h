@@ -45,9 +45,9 @@ struct Params {
 
   // MRT
   bool mrt_enable = false;
-  double mrt_lenRatio = 1.5;
+  float mrt_lenRatio = 1.5;
   unsigned mrt_sampleSize = 100;
-  double mrt_alpha = 0.005;
+  float mrt_alpha = 0.005;
 
 }params;
 

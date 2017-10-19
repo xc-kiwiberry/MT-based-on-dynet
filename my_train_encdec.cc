@@ -215,12 +215,27 @@ int main(int argc, char** argv) {
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
-        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, hyp_sents.size(), cg);
-        // 计算mrt_loss
-        //...
-        // 
-        //cg.backward(...);
+        unsigned sampleNum = hyp_sents.size();
+        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
+        loss_expr = reshape(loss_expr, {sampleNum, len});
+        loss_expr = transpose(loss_expr);
+        loss_expr = reshape(loss_expr, Dim({len}, sampleNum));
+        loss_expr = sum_elems(loss_expr);
+        loss_expr = reshape(loss_expr, {sampleNum});
+        loss_expr = loss_expr * params.mrt_alpha;
+        loss_expr = loss_expr - min_elems(loss_expr);
+        loss_expr = exp(-loss_expr); 
+        loss_expr = loss_expr / sum_elems(loss_expr);
+        loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
+        loss_expr = -sum_elems(loss_expr);
+
+        cg.backward(loss_expr);
         adam.update();
+
+        double loss_this_time = as_scalar(cg.forward(loss_expr));
+        loss += loss_this_time;
+        sum_loss += loss_this_time;
+        
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
       }
@@ -234,15 +249,16 @@ int main(int argc, char** argv) {
         // Encode the batch
         vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, cg);
         // Decode and get error (negative log likelihood)
-        Expression loss_expr = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
-        // Get scalar error for monitoring
-        double loss_this_time = as_scalar(cg.forward(loss_expr));
-        loss += loss_this_time;
-        sum_loss += loss_this_time;
+        Expression loss_batched = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
+        Expression loss_expr = sum_batches(loss_batched)/(float)bsize;
         // Compute gradient with backward pass
         cg.backward(loss_expr);
         // Update parameters
         adam.update();
+        // Get scalar error for monitoring
+        double loss_this_time = as_scalar(cg.forward(loss_expr));
+        loss += loss_this_time;
+        sum_loss += loss_this_time;
         // print info
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;

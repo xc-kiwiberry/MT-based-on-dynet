@@ -255,9 +255,8 @@ public:
         Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
         Expression i_err = pickneglogsoftmax(prob_vocab, y_t);
         Expression mask = input(cg, Dim({1}, bsize * oslen), y_m);
-            // 考虑如何 reshape？已经把所有的搞成batched了，怎么搞成每句分开？
-        // Sum loss over batch
-        return sum_batches(cmult(i_err, mask))/(float)bsize;
+        
+        return cmult(i_err, mask);
     }
   
     /**
