@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
   x=transpose(x);
   print_dim(x.dim());
   debug(as_vector(x.value()));
-  x=sum(x);
+  x=sum_elems(x);
   print_dim(x.dim());
   debug(as_vector(x.value()));
   return 0;//*/
