@@ -35,7 +35,6 @@ struct Params {
   unsigned HIDDEN_DIM = 4;
   unsigned ATTENTION_SIZE = 32;
   unsigned BATCH_SIZE = 1;
-
   unsigned SRC_DIC_LIM = 30000;
   unsigned TGT_DIC_LIM = 30000;
 

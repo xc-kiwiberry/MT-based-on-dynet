@@ -111,12 +111,12 @@ void read_corpus(const string &fileName, const string varName, Dict &dict, vecto
 
 vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent,const int n = 4) {
   // ref_dic
-  unordered_map<vector<int>, int> ref_dic;
+  unordered_map<string, int> ref_dic[n];
   for (int j = 0; j < ref_sent.size()-1; j++){
-      vector<int> tmp;
+      string tmp = "";
       for (int k = 0; k < n && j+k < ref_sent.size()-1; k++){
-        tmp.push_back(ref_sent[j+k]);
-        ref_dic[tmp]++;
+        tmp += " " + string(ref_sent[j+k]);
+        ref_dic[k][tmp]++;
       }
     }
   }
@@ -125,18 +125,20 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
   for (int i = 0; i < sample_sents.size(); i++){
     vector<int>& hyp_sent = sample_sents[i];
     vector<int>cnt(n,0);
-    unordered_map<vector<int>, int> hyp_dic;
+    unordered_map<string, int> hyp_dic[n];
     for (int j = 0; j < hyp_sent.size()-1; j++){
-      vector<int> tmp;
+      string tmp = "";
       for (int k = 0; k < n && j+k < hyp_sent.size()-1; k++){
-        tmp.push_back(hyp_sent[j+k]);
-        hyp_dic[tmp]++;
+        tmp += " " + string(hyp_sent[j+k]);
+        hyp_dic[k][tmp]++;
       }
     }
-    for (auto pr: hyp_dic){
-      auto it = ref_dic.find(pr.first);
-      if (it != ref_dic.end()){
-        cnt[pr.first.size()-1] += min(pr.second, it->second);
+    for (int j = 0; j < n; j++){
+      for (auto pr: hyp_dic[j]){
+        auto it = ref_dic[j].find(pr.first);
+        if (it != ref_dic[j].end()){
+          cnt[j] += min(pr.second, it->second);
+        }
       }
     }
     vector<float> bleu(n,0);
