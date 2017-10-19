@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
         // valid info
         ostringstream valid_info_ss;
         valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
-            << " loss/bacth = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
+            << " loss/batch = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
             << ", cur_bleu = " << cur_bleu
             << ", best_bleu = " << max(cur_bleu, best_bleu)
             << endl;
