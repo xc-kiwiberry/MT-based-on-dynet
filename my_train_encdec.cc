@@ -1,7 +1,6 @@
 
 #include "my_encdec.h"
-#include "my_cl-args.h"
-#include "my_dict.h"
+
 
 using namespace std;
 using namespace dynet;

@@ -9,6 +9,9 @@
 #include "dynet/gru.h"
 #include "dynet/io.h"
 
+#include "my_cl-args.h"
+#include "my_dict.h"
+
 #include <random>
 #include <iostream>
 #include <fstream>
