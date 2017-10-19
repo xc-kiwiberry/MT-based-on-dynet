@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
   return 0;//*/
 
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
+  Params params;
   get_args(argc, argv, params, TRAIN);
   if (params.mrt_enable) params.BATCH_SIZE = 1;
   // Load datasets ---------------------------------------------------------------------------------
@@ -207,7 +208,7 @@ int main(int argc, char** argv) {
       if (params.mrt_enable){ // MRT
         ComputationGraph cg;
         vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
-        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), cg);
+        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), params, cg);
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);

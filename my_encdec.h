@@ -399,10 +399,7 @@ public:
      */
     vector<vector<int>> sample(const vector<Expression>& encoded, 
                     const unsigned& src_len,
-                    //const vector<int>& ref_sent, 
-                    //vector<vector<int>>& hyp_sents, 
-                    //vector<vector<float>>& hyp_masks, 
-                    //vector<float>& hyp_bleu,
+                    const Params& params,
                     ComputationGraph & cg) {
 
         // parameter

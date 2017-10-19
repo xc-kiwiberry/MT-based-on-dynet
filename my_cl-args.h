@@ -48,7 +48,7 @@ struct Params {
   unsigned mrt_sampleSize = 100;
   double mrt_alpha = 0.005;
 
-}params;
+};
 
 /**
  * \brief Get parameters from command line arguments
