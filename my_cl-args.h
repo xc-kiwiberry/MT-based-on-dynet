@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include "my_encdec.h"
 
 enum Task {
   TRAIN, 

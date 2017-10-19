@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include "my_encdec.h"
 
 using namespace std;
 
