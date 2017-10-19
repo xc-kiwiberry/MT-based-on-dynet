@@ -11,6 +11,8 @@ using namespace std;
 
 const int kEOS = 0;
 const int kUNK = 1;
+extern const int kEOS;
+extern const int kUNK;
 
 class Dict {
 

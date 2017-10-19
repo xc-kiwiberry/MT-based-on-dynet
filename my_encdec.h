@@ -28,10 +28,6 @@
 using namespace std;
 using namespace dynet;
 
-extern const int kEOS;
-extern const int kUNK;
-extern Params params;
-
 template <class Builder>
 struct EncoderDecoder {
 private:
