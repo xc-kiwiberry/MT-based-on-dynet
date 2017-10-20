@@ -44,11 +44,6 @@ static void handleInt(int sig){
   vector<vector<float>> train_mask, train_label_mask;
   vector<vector<int>> dev;
 
-void debug(const vector<float>& v) {
-  for (auto aa: v) cerr << aa << " ";
-    cerr <<endl;
-} 
-
 void print_dim(const Dim& d){
   cout<<"({"<<d.d[0];
   for (int i=1;i<d.nd;i++){
@@ -56,6 +51,11 @@ void print_dim(const Dim& d){
   }
   cout<<"},"<<d.bd<<"}"<<endl;
 }
+
+void debug(const Expression& x) {
+  print_dim(x.dim());
+  cout<<x.value()<<endl;
+} 
 
 int main(int argc, char** argv) {
   // Fetch dynet params ----------------------------------------------------------------------------
@@ -67,13 +67,10 @@ int main(int argc, char** argv) {
   ComputationGraph g;
   vector<float> v;
   for (int i=1;i<=24;i++) v.push_back(i);
-  Expression x = input(g, {24}, v);
-  print_dim(x.dim());
-  cout<<x.value()<<endl;
-  debug(as_vector(x.value()));
+  Expression x = input(g, Dim({1,24}), v);
+  debug(x);
   x=cdiv(x,sum_elems(x));
-  print_dim(x.dim());
-  debug(as_vector(x.value()));
+  debug(x);
   return 0;//*/
 
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
