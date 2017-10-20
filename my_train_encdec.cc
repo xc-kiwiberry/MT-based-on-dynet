@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
   dynet::initialize(dyparams);
 
   // debug  
-  
+  /*
   ComputationGraph g;
   vector<float> v;
   for (int i=1;i<=24;i++) v.push_back(i);
@@ -225,23 +225,41 @@ int main(int argc, char** argv) {
         getMRTBatch(ref_sent, hyp_sents, hyp_masks, hyp_bleu);
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
+        cout<<"sampleNum="<<sampleNum<<endl;
+        cout<<"sentLen="<<sentLen<<endl;
+        for (auto val: hyp_bleu)//
+          cout<<val<<" ";
+        cout<<endl;
         // decode
         encoding = lm.encode(training, train_mask, order[si], 1, cg);
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
         // calc loss
+        print_dim(loss_expr.dim());
         loss_expr = reshape(loss_expr, {sampleNum, sentLen});
+        print_dim(loss_expr.dim());
         loss_expr = transpose(loss_expr);
+        print_dim(loss_expr.dim());
         loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
+        print_dim(loss_expr.dim());
         loss_expr = sum_elems(loss_expr);
+        print_dim(loss_expr.dim());
         loss_expr = reshape(loss_expr, {sampleNum});
+        print_dim(loss_expr.dim());
+
+        cout<<"flag1"<<endl;
 
         loss_expr = loss_expr * params.mrt_alpha;
+        print_dim(loss_expr.dim());
         //vector<float> tmp = as_vector(loss_expr.value());
         //loss_expr = loss_expr - (*min_element(tmp.begin(), tmp.end()));
         loss_expr = exp(-loss_expr); 
+        print_dim(loss_expr.dim());
         loss_expr = cdiv(loss_expr, sum_elems(loss_expr));
+        print_dim(loss_expr.dim());
         loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
+        print_dim(loss_expr.dim());
         loss_expr = -sum_elems(loss_expr);
+        print_dim(loss_expr.dim());
 
         cg.backward(loss_expr);
         adam.update();
