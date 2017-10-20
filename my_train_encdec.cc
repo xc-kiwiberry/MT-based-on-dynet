@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
         for (auto val: hyp_bleu)//
           cout<<val<<" ";
         cout<<endl;
-        
+
         // decode
         encoding = lm.encode(training, train_mask, order[si], 1, cg);
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
@@ -246,6 +246,10 @@ int main(int argc, char** argv) {
         loss_expr = loss_expr * params.mrt_alpha;
         //vector<float> tmp = as_vector(loss_expr.value());
         //loss_expr = loss_expr - (*min_element(tmp.begin(), tmp.end()));
+        Expression mm = pick(loss_expr, 0);
+        for (int i = 1; i < sampleNum; i++)
+          mm = min(mm, pick(loss_expr, i));
+        loss_expr = loss_expr - mm;
         loss_expr = exp(-loss_expr); 
         loss_expr = cdiv(loss_expr, sum_elems(loss_expr));
         loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
