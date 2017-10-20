@@ -109,7 +109,7 @@ void read_corpus(const string &fileName, const string varName, Dict &dict, vecto
   cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
 }
 
-vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent,const int n = 4) {
+vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent, const int n = 4) {
   // ref_dic
   unordered_map<string, int> ref_dic[n];
   for (int j = 0; j < ref_sent.size()-1; j++){
@@ -121,9 +121,8 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
   }
   vector<float> final_bleu;
   // each sample
-  for (int i = 0; i < sample_sents.size(); i++){
-    const vector<int>& hyp_sent = sample_sents[i];
-    vector<int>cnt(n,0);
+  for (const auto& hyp_sent: sample_sents){
+    vector<int> cnt(n, 0);
     unordered_map<string, int> hyp_dic[n];
     for (int j = 0; j < hyp_sent.size()-1; j++){
       string tmp = "";
@@ -140,7 +139,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
         }
       }
     }
-    vector<float> bleu(n,0);
+    vector<float> bleu(n, 0.);
     int smooth = 0;
     for (int j = 0; j < n; j++){
       if (0 == cnt[j]) smooth = 1;
@@ -183,10 +182,11 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
     }
   }
   // calc bleu
+  hype_bleu.clear();
   hyp_bleu = calcBleu(hyp_sents, ref_sent);
   // add ref_sent to hyp_sents
-  hyp_bleu.push_back(1.0);
   hyp_sents.push_back(ref_sent);
+  hyp_bleu.push_back(1.0);
   // add padding
   unsigned maxLength = 0;
   for (auto& sent: hyp_sents){
@@ -197,6 +197,7 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
       sent.push_back(kEOS);
   }
   // mask
+  hyp_masks.clear();
   for (int i = 0; i < hyp_sents.size(); i++){
     hyp_masks.push_back(vector<float>());
     hyp_masks[i].push_back(1.);

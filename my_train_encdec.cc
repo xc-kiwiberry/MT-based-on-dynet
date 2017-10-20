@@ -63,21 +63,15 @@ int main(int argc, char** argv) {
   dynet::initialize(dyparams);
 
   // debug  
-  /*
+  
   ComputationGraph g;
-  vector<float> randomNum = as_vector(random_uniform(g, {10}, 0.0, 1.0).value());
-  for (auto v:randomNum)
-    cout<<" "<<v;
-  return 0;
   vector<float> v;
   for (int i=1;i<=24;i++) v.push_back(i);
-  Expression x = input(g, Dim({2,3}, 4), v);
+  Expression x = input(g, {24}, v);
   print_dim(x.dim());
+  cout<<x.value()<<endl;
   debug(as_vector(x.value()));
-  x=transpose(x);
-  print_dim(x.dim());
-  debug(as_vector(x.value()));
-  x=sum_elems(x);
+  x=cdiv(x,sum_elems(x));
   print_dim(x.dim());
   debug(as_vector(x.value()));
   return 0;//*/
@@ -222,15 +216,16 @@ int main(int argc, char** argv) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
       if (params.mrt_enable){ // MRT
+        const vector<int>& ref_sent = training_label[order[si]];
         // sample
         ComputationGraph cg;
         vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
-        vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), cg);
+        vector<vector<int>> hyp_sents = lm.sample(encoding, ref_sent.size(), cg);
         cg.clear();
         // process samples
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
-        getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
+        getMRTBatch(ref_sent, hyp_sents, hyp_masks, hyp_bleu);
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
         // decode
