@@ -197,7 +197,7 @@ int main(int argc, char** argv) {
   random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
   //int epoch = 0;
-  int cnt_batches = 1;
+  int cnt_batches = 0;
   double best_bleu = 0;
   // Initialize loss 
   double loss = 0;
@@ -211,6 +211,80 @@ int main(int argc, char** argv) {
   // Run indefinitely
   while (true) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
+      // Print progress every (print_freq) batches
+      if (cnt_batches % params.print_freq == 0) {
+        // Print informations
+        cerr << endl;
+        cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
+        // Reinitialize timer
+        delete iteration;
+        iteration = new Timer("completed in");
+        // Reinitialize loss
+        loss = 0;
+      }
+      // valid & save ---------------------------
+      if (cnt_batches % params.save_freq == 0){
+        cerr << endl << "start validation..." << endl;
+        // translation
+        ofstream ofs_dev_trans(".tmp_dev_trans");
+        int miss = 0;
+        for (int i = 0; i < dev.size(); i++) {
+          ComputationGraph cg;
+          vector<unsigned> res = lm.generate(dev[i], miss, cg);
+          for (int j = 0; j < res.size()-1 ; ++j) 
+            ofs_dev_trans << dictOut.convert(res[j]) << " ";
+          ofs_dev_trans << endl;
+          for (int j = 0; j < 100; j++) cerr << "\b";
+          cerr << "already translated " << i+1 << " sents. ";
+        }
+        cerr << endl << "translation completed... " << miss << " sents can't be translated...";
+        delete iteration;
+        iteration = new Timer("completed in");
+        // multi-bleu
+        string cmd = "perl ../multi-bleu.perl " + 
+               params.dev_labels_file + " < .tmp_dev_trans > .tmp_bleu_res";
+        system(cmd.c_str());
+        // readin bleu score
+        ifstream ifs_bleu_res(".tmp_bleu_res"); assert(ifs_bleu_res);
+        string bleu_str = "";
+        getline(ifs_bleu_res, bleu_str); assert(bleu_str != "");
+        double cur_bleu;
+        sscanf(bleu_str.substr(7, 5).c_str(), "%lf", &cur_bleu);
+        // valid info
+        ostringstream valid_info_ss;
+        valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
+            << " loss/batch = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
+            << ", cur_bleu = " << cur_bleu
+            << ", best_bleu = " << max(cur_bleu, best_bleu)
+            << endl;
+        cerr << valid_info_ss.str();
+        // save best model
+        mkdir("models", 0755);
+        TextFileSaver saver("models//.tmp.params");
+        saver.save(model);
+        ostringstream model_name_ss;
+        model_name_ss 
+            << "models//"
+            << params.exp_name 
+            << '_' << params.LAYERS
+            << '_' << params.INPUT_DIM
+            << '_' << params.HIDDEN_DIM 
+            << ".params";
+        if (best_bleu < cur_bleu){
+          best_bleu = cur_bleu;
+          //TextFileSaver saver(model_name_ss.str());
+          //saver.save(model);
+          string cmd = "mv models/.tmp.params " + model_name_ss.str();
+          system(cmd.c_str());
+          cerr << "save model: " << model_name_ss.str() << " success." << endl;
+        }
+        cerr << endl;
+        // print log
+        ofstream ofs_log("log", ios::out|ios::app);
+        ofs_log << valid_info_ss.str();
+        // Reinitialize sum_loss
+        sum_loss = 0;
+      }
       // train a batch
       if (params.mrt_enable){ // MRT
         const vector<int>& ref_sent = training_label[order[si]];
@@ -289,80 +363,6 @@ int main(int argc, char** argv) {
         // print info
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
-      }
-      // Print progress every (print_freq) batches
-      if (cnt_batches % params.print_freq == 0) {
-        // Print informations
-        cerr << endl;
-        cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
-        // Reinitialize timer
-        delete iteration;
-        iteration = new Timer("completed in");
-        // Reinitialize loss
-        loss = 0;
-      }
-      // valid & save ---------------------------
-      if (cnt_batches % params.save_freq == 0){
-        cerr << endl << "start validation..." << endl;
-        // translation
-        ofstream ofs_dev_trans(".tmp_dev_trans");
-        int miss = 0;
-        for (int i = 0; i < dev.size(); i++) {
-          ComputationGraph cg;
-          vector<unsigned> res = lm.generate(dev[i], miss, cg);
-          for (int j = 0; j < res.size()-1 ; ++j) 
-            ofs_dev_trans << dictOut.convert(res[j]) << " ";
-          ofs_dev_trans << endl;
-          for (int j = 0; j < 100; j++) cerr << "\b";
-          cerr << "already translated " << i+1 << " sents. ";
-        }
-        cerr << endl << "translation completed... " << miss << " sents can't be translated...";
-        delete iteration;
-        iteration = new Timer("completed in");
-        // multi-bleu
-        string cmd = "perl ../multi-bleu.perl " + 
-               params.dev_labels_file + " < .tmp_dev_trans > .tmp_bleu_res";
-        system(cmd.c_str());
-        // readin bleu score
-        ifstream ifs_bleu_res(".tmp_bleu_res"); assert(ifs_bleu_res);
-        string bleu_str = "";
-        getline(ifs_bleu_res, bleu_str); assert(bleu_str != "");
-        double cur_bleu;
-        sscanf(bleu_str.substr(7, 5).c_str(), "%lf", &cur_bleu);
-        // valid info
-        ostringstream valid_info_ss;
-        valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
-            << " loss/batch = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
-            << ", cur_bleu = " << cur_bleu
-            << ", best_bleu = " << max(cur_bleu, best_bleu)
-            << endl;
-        cerr << valid_info_ss.str();
-        // save best model
-        mkdir("models", 0755);
-        TextFileSaver saver("models//.tmp.params");
-        saver.save(model);
-        ostringstream model_name_ss;
-        model_name_ss 
-            << "models//"
-            << params.exp_name 
-            << '_' << params.LAYERS
-            << '_' << params.INPUT_DIM
-            << '_' << params.HIDDEN_DIM 
-            << ".params";
-        if (best_bleu < cur_bleu){
-          best_bleu = cur_bleu;
-          //TextFileSaver saver(model_name_ss.str());
-          //saver.save(model);
-          string cmd = "mv models/.tmp.params " + model_name_ss.str();
-          system(cmd.c_str());
-          cerr << "save model: " << model_name_ss.str() << " success." << endl;
-        }
-        cerr << endl;
-        // print log
-        ofstream ofs_log("log", ios::out|ios::app);
-        ofs_log << valid_info_ss.str();
-        // Reinitialize sum_loss
-        sum_loss = 0;
       }
     }
   }
