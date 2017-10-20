@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
   dynet::initialize(dyparams);
 
   // debug  
+  /*
   ComputationGraph g;
   vector<float> randomNum = as_vector(random_uniform(g, {10}, 0.0, 1.0).value());
   for (auto v:randomNum)
@@ -221,18 +222,21 @@ int main(int argc, char** argv) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
       // train a batch
       if (params.mrt_enable){ // MRT
+        // sample
         ComputationGraph cg;
         vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
         vector<vector<int>> hyp_sents = lm.sample(encoding, training_label[order[si]].size(), cg);
         cg.clear();
-        encoding = lm.encode(training, train_mask, order[si], 1, cg);
+        // process samples
         vector<vector<float>> hyp_masks;
         vector<float> hyp_bleu;
         getMRTBatch(training_label[order[si]], hyp_sents, hyp_masks, hyp_bleu);
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
+        // decode
+        encoding = lm.encode(training, train_mask, order[si], 1, cg);
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
-        
+        // calc loss
         loss_expr = reshape(loss_expr, {sampleNum, sentLen});
         loss_expr = transpose(loss_expr);
         loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
