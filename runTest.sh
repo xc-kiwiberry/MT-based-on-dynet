@@ -1,5 +1,5 @@
 #!/bin/bash
-./mt_test.executable \
+./mt_test \
  --dynet-devices GPU:7 \
  --dynet-mem 2300 \
  --name nist06 \
