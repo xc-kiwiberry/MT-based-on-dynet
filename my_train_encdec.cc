@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
         loss_expr = loss_expr * params.mrt_alpha;
         //vector<float> tmp = as_vector(loss_expr.value());
         //loss_expr = loss_expr - (*min_element(tmp.begin(), tmp.end()));
-        Expression mm = pick(loss_expr, 0);
+        Expression mm = pick(loss_expr, int(0));
         for (int i = 1; i < sampleNum; i++)
           mm = min(mm, pick(loss_expr, i));
         loss_expr = loss_expr - mm;
