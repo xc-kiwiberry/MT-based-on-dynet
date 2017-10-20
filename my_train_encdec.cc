@@ -227,11 +227,12 @@ int main(int argc, char** argv) {
         unsigned sentLen = hyp_sents[0].size();
 
         // debug
+        /*
         cout<<"sampleNum="<<sampleNum<<endl;//
         cout<<"sentLen="<<sentLen<<endl;//
         for (auto val: hyp_bleu)//
           cout<<val<<" ";
-        cout<<endl;
+        cout<<endl;//*/
 
         // decode
         encoding = lm.encode(training, train_mask, order[si], 1, cg);
