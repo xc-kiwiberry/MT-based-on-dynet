@@ -182,7 +182,7 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
     }
   }
   // calc bleu
-  hype_bleu.clear();
+  hyp_bleu.clear();
   hyp_bleu = calcBleu(hyp_sents, ref_sent);
   // add ref_sent to hyp_sents
   hyp_sents.push_back(ref_sent);
