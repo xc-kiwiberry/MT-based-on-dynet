@@ -62,9 +62,12 @@ int main(int argc, char** argv) {
   auto dyparams = dynet::extract_dynet_params(argc, argv);
   dynet::initialize(dyparams);
 
-  // debug
-  /*
+  // debug  
   ComputationGraph g;
+  vector<float> randomNum = as_vector(random_uniform(g, {10}, 0.0, 1.0).value());
+  for (auto v:randomNum)
+    cout<<" "<<v;
+  return 0;
   vector<float> v;
   for (int i=1;i<=24;i++) v.push_back(i);
   Expression x = input(g, Dim({2,3}, 4), v);

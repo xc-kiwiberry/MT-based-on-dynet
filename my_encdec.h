@@ -437,7 +437,7 @@ public:
             for (int i = 0; i < params.mrt_sampleSize; i++){
                 for (int j = i*TGT_VOCAB_SIZE; j < (i+1)*TGT_VOCAB_SIZE; j++){
                     randomNum[i] -= probs[j];
-                    if (randomNum[i]<=0){
+                    if (randomNum[i] <= 0){
                         ids.push_back(j % TGT_VOCAB_SIZE);
                         hyp_sents[i].push_back(j % TGT_VOCAB_SIZE);
                         break;
