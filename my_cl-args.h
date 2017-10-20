@@ -206,6 +206,22 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.mrt_enable;
       i++;
+    } else if (arg == "--mrt_lenRatio") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.mrt_lenRatio;
+      i++;
+    } else if (arg == "--mrt_sampleSize") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.mrt_sampleSize;
+      i++;
     } else if (arg == "--src_dic_lim") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
