@@ -261,12 +261,12 @@ int main(int argc, char** argv) {
         loss_expr = -sum_elems(loss_expr);
         print_dim(loss_expr.dim());
 
-        cg.backward(loss_expr);
-        adam.update();
-
         double loss_this_time = as_scalar(cg.forward(loss_expr));
         loss += loss_this_time;
         sum_loss += loss_this_time;
+
+        cg.backward(loss_expr);
+        adam.update();
 
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
         cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
