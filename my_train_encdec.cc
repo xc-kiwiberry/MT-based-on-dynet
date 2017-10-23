@@ -55,7 +55,7 @@ void print_dim(const Dim& d){
 void debug(const Expression& x) {
   print_dim(x.dim());
   cout<<x.value()<<endl;
-} 
+}
 
 int main(int argc, char** argv) {
   // Fetch dynet params ----------------------------------------------------------------------------
@@ -178,7 +178,6 @@ int main(int argc, char** argv) {
   cerr << "params.INPUT_DIM = " << params.INPUT_DIM << endl;
   cerr << "params.HIDDEN_DIM = " << params.HIDDEN_DIM << endl;
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
-  //cerr << "params.ATTENTION_SIZE = " << params.ATTENTION_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
   if (params.mrt_enable){
@@ -211,6 +210,74 @@ int main(int argc, char** argv) {
   // Run indefinitely
   while (true) {
     for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
+      // train a batch
+      if (params.mrt_enable){ // MRT
+        const vector<int>& ref_sent = training_label[order[si]];
+        // sample
+        ComputationGraph cg;
+        vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
+        vector<vector<int>> hyp_sents = lm.sample(encoding, ref_sent.size(), cg);
+        cg.clear();
+        // process samples
+        vector<vector<float>> hyp_masks;
+        vector<float> hyp_bleu;
+        getMRTBatch(ref_sent, hyp_sents, hyp_masks, hyp_bleu);
+        unsigned sampleNum = hyp_sents.size();
+        unsigned sentLen = hyp_sents[0].size();
+        // decode
+        encoding = lm.encode(training, train_mask, order[si], 1, cg);
+        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
+        // calc loss
+        loss_expr = reshape(loss_expr, {sampleNum, sentLen});
+        loss_expr = transpose(loss_expr);
+        loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
+        loss_expr = sum_elems(loss_expr);
+        loss_expr = reshape(loss_expr, {sampleNum});
+
+        loss_expr = loss_expr * params.mrt_alpha;
+        Expression mm = pick(loss_expr, unsigned(0));
+        for (int i = 1; i < sampleNum; i++)
+          mm = min(mm, pick(loss_expr, i));
+        loss_expr = loss_expr - mm;
+        loss_expr = exp(-loss_expr); 
+        loss_expr = cdiv(loss_expr, sum_elems(loss_expr));
+        loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
+        loss_expr = -sum_elems(loss_expr);
+
+        double loss_this_time = as_scalar(cg.forward(loss_expr));
+        loss += loss_this_time;
+        sum_loss += loss_this_time;
+
+        cg.backward(loss_expr);
+        adam.update();
+
+        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
+        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+      }
+      else { // MLE
+        // build graph for this instance
+        ComputationGraph cg;
+        // Compute batch start id and size
+        int id = order[si] * params.BATCH_SIZE;
+        //cerr << "src sent len = " << training[id].size() << ", tgt sent len = " << training_label[id].size() << endl;
+        unsigned bsize = std::min((unsigned)training.size() - id, params.BATCH_SIZE);
+        // Encode the batch
+        vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, cg);
+        // Decode and get error (negative log likelihood)
+        Expression loss_batched = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
+        Expression loss_expr = sum_batches(loss_batched)/(float)bsize;
+        // Get scalar error for monitoring
+        double loss_this_time = as_scalar(cg.forward(loss_expr));
+        loss += loss_this_time;
+        sum_loss += loss_this_time;
+        // Compute gradient with backward pass
+        cg.backward(loss_expr);
+        // Update parameters
+        adam.update();
+        // print info
+        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
+        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+      }
       // Print progress every (print_freq) batches
       if (cnt_batches % params.print_freq == 0) {
         // Print informations
@@ -284,85 +351,6 @@ int main(int argc, char** argv) {
         ofs_log << valid_info_ss.str();
         // Reinitialize sum_loss
         sum_loss = 0;
-      }
-      // train a batch
-      if (params.mrt_enable){ // MRT
-        const vector<int>& ref_sent = training_label[order[si]];
-        // sample
-        ComputationGraph cg;
-        vector<Expression> encoding = lm.encode(training, train_mask, order[si], 1, cg);
-        vector<vector<int>> hyp_sents = lm.sample(encoding, ref_sent.size(), cg);
-        cg.clear();
-        // process samples
-        vector<vector<float>> hyp_masks;
-        vector<float> hyp_bleu;
-        getMRTBatch(ref_sent, hyp_sents, hyp_masks, hyp_bleu);
-        unsigned sampleNum = hyp_sents.size();
-        unsigned sentLen = hyp_sents[0].size();
-
-        // debug
-        /*
-        cout<<"sampleNum="<<sampleNum<<endl;//
-        cout<<"sentLen="<<sentLen<<endl;//
-        for (auto val: hyp_bleu)//
-          cout<<val<<" ";
-        cout<<endl;//*/
-
-        // decode
-        encoding = lm.encode(training, train_mask, order[si], 1, cg);
-        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
-        // calc loss
-        loss_expr = reshape(loss_expr, {sampleNum, sentLen});
-        loss_expr = transpose(loss_expr);
-        loss_expr = reshape(loss_expr, Dim({sentLen}, sampleNum));
-        loss_expr = sum_elems(loss_expr);
-        loss_expr = reshape(loss_expr, {sampleNum});
-
-        loss_expr = loss_expr * params.mrt_alpha;
-        //vector<float> tmp = as_vector(loss_expr.value());
-        //loss_expr = loss_expr - (*min_element(tmp.begin(), tmp.end()));
-        Expression mm = pick(loss_expr, unsigned(0));
-        for (int i = 1; i < sampleNum; i++)
-          mm = min(mm, pick(loss_expr, i));
-        loss_expr = loss_expr - mm;
-        loss_expr = exp(-loss_expr); 
-        loss_expr = cdiv(loss_expr, sum_elems(loss_expr));
-        loss_expr = cmult(loss_expr, input(cg, {sampleNum}, hyp_bleu));
-        loss_expr = -sum_elems(loss_expr);
-
-        double loss_this_time = as_scalar(cg.forward(loss_expr));
-        loss += loss_this_time;
-        sum_loss += loss_this_time;
-
-        cg.backward(loss_expr);
-        adam.update();
-
-        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
-        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
-      }
-      else { // MLE
-        // build graph for this instance
-        ComputationGraph cg;
-        // Compute batch start id and size
-        int id = order[si] * params.BATCH_SIZE;
-        //cerr << "src sent len = " << training[id].size() << ", tgt sent len = " << training_label[id].size() << endl;
-        unsigned bsize = std::min((unsigned)training.size() - id, params.BATCH_SIZE);
-        // Encode the batch
-        vector<Expression> encoding = lm.encode(training, train_mask, id, bsize, cg);
-        // Decode and get error (negative log likelihood)
-        Expression loss_batched = lm.decode(encoding, training_label, train_label_mask, id, bsize, cg);
-        Expression loss_expr = sum_batches(loss_batched)/(float)bsize;
-        // Get scalar error for monitoring
-        double loss_this_time = as_scalar(cg.forward(loss_expr));
-        loss += loss_this_time;
-        sum_loss += loss_this_time;
-        // Compute gradient with backward pass
-        cg.backward(loss_expr);
-        // Update parameters
-        adam.update();
-        // print info
-        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
-        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
       }
     }
   }

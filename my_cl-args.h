@@ -31,15 +31,15 @@ struct Params {
 
   // default Hyperparameters
   unsigned LAYERS = 1;
-  unsigned INPUT_DIM = 2;
-  unsigned HIDDEN_DIM = 4;
-  unsigned ATTENTION_SIZE = 32;
-  unsigned BATCH_SIZE = 1;
+  unsigned INPUT_DIM = 620;
+  unsigned HIDDEN_DIM = 1000;
+  unsigned ATTENTION_SIZE = 1000;
+  unsigned BATCH_SIZE = 80;
   unsigned SRC_DIC_LIM = 30000;
   unsigned TGT_DIC_LIM = 30000;
 
-  unsigned print_freq = 1000;
-  unsigned save_freq = 10000;
+  unsigned print_freq = 500;
+  unsigned save_freq = 2000;
 
   bool debug_info = false;
 
