@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
   ParameterCollection model;
   // Use adam optimizer
   AdamTrainer adam = AdamTrainer(model, 0.0005);
-  //double slow_start = 0.998;
+  double slow_start = 0.998;
 
   cerr << "create optimizer success." << endl;
 
@@ -249,6 +249,8 @@ int main(int argc, char** argv) {
         sum_loss += loss_this_time;
 
         cg.backward(loss_expr);
+        slow_start *= 0.998;
+        adam.learning_rate = 0.0005*(1-slow_start);
         adam.update();
 
         for (auto k = 0 ; k < 100; ++k) cerr << "\b";
