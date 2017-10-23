@@ -150,7 +150,9 @@ int main(int argc, char** argv) {
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;
   // Use adam optimizer
-  AdamTrainer adam = AdamTrainer(model, 0.0005);
+  double init_learning_rate = 0.0005;
+  if (params.mrt_enable) init_learning_rate = 0.00001;
+  AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   double slow_start = 0.998;
 
   cerr << "create optimizer success." << endl;
@@ -196,7 +198,7 @@ int main(int argc, char** argv) {
   random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
   //int epoch = 0;
-  int cnt_batches = 0;
+  int cnt_batches = 1;
   double best_bleu = 0;
   // Initialize loss 
   double loss = 0;
@@ -249,12 +251,6 @@ int main(int argc, char** argv) {
         sum_loss += loss_this_time;
 
         cg.backward(loss_expr);
-        slow_start *= 0.998;
-        adam.learning_rate = 0.0005*(1-slow_start);
-        adam.update();
-
-        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
-        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
       }
       else { // MLE
         // build graph for this instance
@@ -274,12 +270,16 @@ int main(int argc, char** argv) {
         sum_loss += loss_this_time;
         // Compute gradient with backward pass
         cg.backward(loss_expr);
-        // Update parameters
-        adam.update();
-        // print info
-        for (auto k = 0 ; k < 100; ++k) cerr << "\b";
-        cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
       }
+
+      // Update parameters, adam slow start
+      slow_start *= 0.998;
+      adam.learning_rate = init_learning_rate * (1 - slow_start);
+      adam.update();
+      // print info
+      for (auto k = 0 ; k < 100; ++k) cerr << "\b";
+      cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+
       // Print progress every (print_freq) batches
       if (cnt_batches % params.print_freq == 0) {
         // Print informations
