@@ -14,7 +14,8 @@ int main(){
         v2.push_back(s2[i]-'0');
     auto res = calcBleu(vector<vector<int>>(1,v1),v2);
     for (auto r:res){
-        cout<<r<<" ";
+        printf("%.10f ",r);
     }
+    printf("\n");
     return 0;
 }
