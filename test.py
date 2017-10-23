@@ -13,6 +13,11 @@ def getRefDict(words, ngram):
 				now_ref_dict[gram] += 1
 	return now_ref_dict, lens
 
+def my_log(a):
+	if a == 0:
+		return -1000000
+	return math.log(a)
+
 def calBleu(x, ref_dict, lens, ngram):
 	length_trans = len(x)
 	words = x
@@ -55,4 +60,4 @@ if __name__ == '__main__':
     s2 = '2341231234123412312312313123443130'
     w2 = [int(i) for i in list(s2)]
     ref, lens = getRefDict(w1[:-1], 4)
-    print calBleu(w2[-1],ref,lens,4)[0]
+    print calBleu(w2[:-1],ref,lens,4)[0]
