@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
         cg.clear();
         // process samples
         vector<vector<float>> hyp_masks;
-        vector<float> hyp_bleu;
+        vector<double> hyp_bleu;
         getMRTBatch(ref_sent, hyp_sents, hyp_masks, hyp_bleu);
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();

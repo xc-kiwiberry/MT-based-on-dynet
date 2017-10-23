@@ -109,7 +109,7 @@ void read_corpus(const string &fileName, const string varName, Dict &dict, vecto
   cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
 }
 
-vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent, const int n = 4) {
+vector<double> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent, const int n = 4) {
   // ref_dic
   unordered_map<string, int> ref_dic[n];
   for (int j = 0; j < ref_sent.size()-1; j++){
@@ -119,7 +119,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
       ref_dic[k][tmp]++;
     }
   }
-  vector<float> final_bleu;
+  vector<double> final_bleu;
   // each sample
   for (const auto& hyp_sent: sample_sents){
     vector<int> cnt(n, 0);
@@ -139,7 +139,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
         }
       }
     }
-    vector<float> bleu(n, 0.);
+    vector<double> bleu(n, 0.);
     int smooth = 0;
     for (int j = 0; j < n; j++){
       if (0 == cnt[j]) smooth = 1;
@@ -150,10 +150,10 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
       else
         bleu[j] = 1.;
     }
-    float brev_penalty = 1.;
+    double brev_penalty = 1.;
     if (hyp_sent.size() < ref_sent.size())
       brev_penalty = exp(1 - 1. * (ref_sent.size()-1) / (hyp_sent.size()-1) );
-    float logsum = 0.;
+    double logsum = 0.;
     for (int j = 0; j < n; j++)
       logsum += log(bleu[j]);
     final_bleu.push_back(brev_penalty * exp(logsum/n));
@@ -161,7 +161,7 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
   return final_bleu;
 }
 
-void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, vector<vector<float>>& hyp_masks, vector<float>& hyp_bleu){
+void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, vector<vector<float>>& hyp_masks, vector<double>& hyp_bleu){
   // del padding
   for (auto& sent: hyp_sents){
     for (int i = 0; i < sent.size(); i++){
