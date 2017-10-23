@@ -154,8 +154,10 @@ vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int
     if (hyp_sent.size() < ref_sent.size())
       brev_penalty = exp(1 - 1. * (ref_sent.size()-1) / (hyp_sent.size()-1) );
     float logsum = 0.;
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < n; j++){
+      assert(bleu[j] != 0);
       logsum += log(bleu[j]);
+    }
     final_bleu.push_back(brev_penalty * exp(logsum/n));
   }
   return final_bleu;

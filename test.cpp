@@ -13,7 +13,7 @@ int main(){
     for (int i=0;i<s2.length();i++)
         v2.push_back(s2[i]-'0');
     auto res = calcBleu(vector<vector<int>>(1,v1),v2);
-    for (auto r:res){
+    for (auto r: res){
         printf("%.10f ",r);
     }
     printf("\n");
