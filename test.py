@@ -55,9 +55,9 @@ def calBleu(x, ref_dict, lens, ngram):
 	return now_bleu
 
 if __name__ == '__main__':
-    s1 = '1234123412341233412341234123412340'
+    s1 = '1423143241324312341234132431423143241243134341243341342440'
     w1 = [int(i) for i in list(s1)]
-    s2 = '2341231234123412312312313123443130'
+    s2 = '4123431234431786878667154233413457126753751234142341321232340'
     w2 = [int(i) for i in list(s2)]
     ref, lens = getRefDict(w1[:-1], 4)
-    print calBleu(w2[:-1],ref,lens,4)[0]
+    print calBleu(w2[:-1],ref,lens,4)
