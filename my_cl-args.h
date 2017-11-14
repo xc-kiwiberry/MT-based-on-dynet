@@ -247,7 +247,10 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.learning_rate;
       i++;
-    } 
+    } else {
+      std::cerr << "No matching argument for " << arg << std::endl;
+      abort();
+    }
     i++;
   }
 

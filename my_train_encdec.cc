@@ -153,6 +153,7 @@ int main(int argc, char** argv) {
   double init_learning_rate = params.learning_rate;
   //if (params.mrt_enable) init_learning_rate = 0.00001;
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
+  adam.sparse_updates_enabled = false;
   double slow_start = 0.998;
 
   cerr << "create optimizer success." << endl;
