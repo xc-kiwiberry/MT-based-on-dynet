@@ -165,7 +165,8 @@ int main(int argc, char** argv) {
                                  params.HIDDEN_DIM,
                                  params.ATTENTION_SIZE,
                                  SRC_VOCAB_SIZE,
-                                 TGT_VOCAB_SIZE);
+                                 TGT_VOCAB_SIZE,
+                                 0.08);
   
   // Load preexisting weights (if provided)
   if (params.model_file != "") {

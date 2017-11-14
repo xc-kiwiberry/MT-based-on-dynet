@@ -69,7 +69,8 @@ public:
                             unsigned hidden_dim,
                             unsigned attention_size,
                             unsigned src_vocab_size,
-                            unsigned tgt_vocab_size) :
+                            unsigned tgt_vocab_size,
+                            float init_val) :
         LAYERS(num_layers), INPUT_DIM(input_dim), HIDDEN_DIM(hidden_dim), ATTENTION_SIZE(attention_size),
         SRC_VOCAB_SIZE(src_vocab_size), TGT_VOCAB_SIZE(tgt_vocab_size),
         dec_builder(num_layers, input_dim + hidden_dim * 2, hidden_dim, model),
