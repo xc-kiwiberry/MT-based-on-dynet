@@ -67,7 +67,7 @@ void get_args(int argc,
               char** argv,
               Params& params,
               Task task) {
-  int i = 0;
+  int i = 1;
   while (i < argc) {
     string arg = argv[i];
     if (arg == "--name") {
