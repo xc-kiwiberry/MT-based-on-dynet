@@ -34,6 +34,7 @@ struct EncoderDecoder {
 private:
     unsigned INPUT_DIM;
     unsigned HIDDEN_DIM;
+    unsigned TGT_VOCAB_SIZE;
     
 
     Builder dec_builder;     // GRU
@@ -68,7 +69,7 @@ public:
                             unsigned SRC_VOCAB_SIZE,
                             unsigned TGT_VOCAB_SIZE,
                             float init_val) :
-        INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM),
+        INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM), TGT_VOCAB_SIZE(TGT_VOCAB_SIZE),
         dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, init_val, model),
         fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model),
         bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model) {
