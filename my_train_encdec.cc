@@ -150,8 +150,9 @@ int main(int argc, char** argv) {
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;
   // Use adam optimizer
-  double init_learning_rate = params.learning_rate;
-  //if (params.mrt_enable) init_learning_rate = 0.00001;
+  //double init_learning_rate = params.learning_rate;
+  if (params.mrt_enable) init_learning_rate = 0.00001; // MRT
+  else init_learning_rate = 0.0005; // MLE
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   adam.sparse_updates_enabled = false;
   double slow_start = 0.998;

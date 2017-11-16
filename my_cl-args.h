@@ -42,7 +42,7 @@ struct Params {
   unsigned save_freq = 2000;
 
   bool debug_info = false;
-  double learning_rate = 0.0005;
+  //double learning_rate = 0.0005;
 
   // MRT
   bool mrt_enable = false;
@@ -239,7 +239,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.TGT_DIC_LIM;
       i++;
-    } else if (arg == "--learning_rate") {
+    } /*else if (arg == "--learning_rate") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -247,7 +247,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.learning_rate;
       i++;
-    } else {
+    } */else {
       std::cerr << "No matching argument for " << arg << std::endl;
       abort();
     }
