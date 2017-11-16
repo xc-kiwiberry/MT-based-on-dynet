@@ -15,9 +15,9 @@ enum { X2Z, H2Z, BZ, X2R, H2R, BR, X2H, H2H, BH };
 GRUBuilder::GRUBuilder(unsigned layers,
                        unsigned input_dim,
                        unsigned hidden_dim,
-                       float scale,
                        ParameterCollection& model) : hidden_dim(hidden_dim), layers(layers) {
   unsigned layer_input_dim = input_dim;
+  float scale = 0.08;
   local_model = model.add_subcollection("gru-builder");
   for (unsigned i = 0; i < layers; ++i) {
     // z
