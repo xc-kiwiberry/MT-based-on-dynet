@@ -67,29 +67,29 @@ public:
                             unsigned ATTENTION_SIZE,
                             unsigned SRC_VOCAB_SIZE,
                             unsigned TGT_VOCAB_SIZE,
-                            float init_val) :
+                            float scale = 0.08) :
         INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM), TGT_VOCAB_SIZE(TGT_VOCAB_SIZE),
         dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, model),
         fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, model),
         bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, model) {
 
-        p_ec = model.add_lookup_parameters(SRC_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
-        p_c = model.add_lookup_parameters(TGT_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
+        p_ec = model.add_lookup_parameters(SRC_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(scale));
+        p_c = model.add_lookup_parameters(TGT_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(scale));
 
-        p_hid2hid = model.add_parameters( { HIDDEN_DIM, HIDDEN_DIM }, init_val);
-        p_b_hid = model.add_parameters( { HIDDEN_DIM }, init_val);
+        p_hid2hid = model.add_parameters( { HIDDEN_DIM, HIDDEN_DIM }, scale);
+        p_b_hid = model.add_parameters( { HIDDEN_DIM }, scale);
 
-        attention_w1 = model.add_parameters( { ATTENTION_SIZE, HIDDEN_DIM * 2 }, init_val);
-        attention_w2 = model.add_parameters( { ATTENTION_SIZE, HIDDEN_DIM * LAYERS }, init_val); // GRU
+        attention_w1 = model.add_parameters( { ATTENTION_SIZE, HIDDEN_DIM * 2 }, scale);
+        attention_w2 = model.add_parameters( { ATTENTION_SIZE, HIDDEN_DIM * LAYERS }, scale); // GRU
         //attention_w2 = model.add_parameters( { ATTENTION_SIZE, HIDDEN_DIM * LAYERS * 2 }); // LSTM
-        attention_v = model.add_parameters( { 1, ATTENTION_SIZE }, init_val);
+        attention_v = model.add_parameters( { 1, ATTENTION_SIZE }, scale);
 
-        p_readout_allthree = model.add_parameters( { HIDDEN_DIM, INPUT_DIM + HIDDEN_DIM * 2 + HIDDEN_DIM }, init_val);
-        p_readout_offset = model.add_parameters( { HIDDEN_DIM }, init_val);
+        p_readout_allthree = model.add_parameters( { HIDDEN_DIM, INPUT_DIM + HIDDEN_DIM * 2 + HIDDEN_DIM }, scale);
+        p_readout_offset = model.add_parameters( { HIDDEN_DIM }, scale);
 
-        p_hid2emb = model.add_parameters( { INPUT_DIM, HIDDEN_DIM }, init_val);
-        p_emb2voc = model.add_parameters( { TGT_VOCAB_SIZE, INPUT_DIM }, init_val);
-        p_b_voc = model.add_parameters( { TGT_VOCAB_SIZE }, init_val );
+        p_hid2emb = model.add_parameters( { INPUT_DIM, HIDDEN_DIM }, scale);
+        p_emb2voc = model.add_parameters( { TGT_VOCAB_SIZE, INPUT_DIM }, scale);
+        p_b_voc = model.add_parameters( { TGT_VOCAB_SIZE }, scale );
     }
 
     /**

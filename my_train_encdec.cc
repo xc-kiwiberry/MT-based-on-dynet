@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
   signal(SIGINT, handleInt);
   // open log
   ofstream ofs_log("log_" + params.exp_name, ios::out|ios::app);
-  ofs_log << endl << "Iteration\t\tloss\t\tbleu\t\tbest" <<endl;
+  ofs_log << endl << "Iteration\tloss\tbleu\tbest" <<endl;
   ofs_log << "----------------------------------------------------" << endl;
   mkdir("models", 0755);
 
