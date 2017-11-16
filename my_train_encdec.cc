@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
   signal(SIGINT, handleInt);
   // open log
   ofstream ofs_log("log_" + params.exp_name, ios::out|ios::app);
-  ofs_log << endl << "Iteration\tloss\tbleu\tbest" <<endl;
+  ofs_log << endl << "Iteration\tloss\t\tbleu\tbest" <<endl;
   ofs_log << "----------------------------------------------------" << endl;
   mkdir("models", 0755);
 
@@ -333,7 +333,7 @@ int main(int argc, char** argv) {
             << endl;
         cerr << valid_info_ss.str();
         // print log
-        ofs_log << iters << "\t" << (sum_loss * params.BATCH_SIZE / params.save_freq) << "\t"
+        ofs_log << iters << "\t\t" << (sum_loss * params.BATCH_SIZE / params.save_freq) << "\t\t"
                 << cur_bleu << "\t" << max(cur_bleu, best_bleu) << endl;
         // save best model
         if (best_bleu < cur_bleu){
