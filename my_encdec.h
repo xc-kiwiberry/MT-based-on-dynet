@@ -8,10 +8,11 @@
 #include "dynet/tensor.h"
 #include "dynet/io.h"
 #include "dynet/param-init.h"
+#include "dynet/gru.h"
 
 #include "my_dict.h"
 #include "my_cl-args.h"
-#include "my_gru.h"
+//#include "my_gru.h"
 
 #include <random>
 #include <iostream>
@@ -36,7 +37,6 @@ private:
     unsigned HIDDEN_DIM;
     unsigned TGT_VOCAB_SIZE;
     
-
     Builder dec_builder;     // GRU
     Builder fwd_enc_builder;
     Builder bwd_enc_builder;
@@ -67,12 +67,11 @@ public:
                             unsigned HIDDEN_DIM,
                             unsigned ATTENTION_SIZE,
                             unsigned SRC_VOCAB_SIZE,
-                            unsigned TGT_VOCAB_SIZE,
-                            float init_val) :
+                            unsigned TGT_VOCAB_SIZE) :
         INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM), TGT_VOCAB_SIZE(TGT_VOCAB_SIZE),
-        dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, init_val, model),
-        fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model),
-        bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model) {
+        dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, model),
+        fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, model),
+        bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, model) {
 
         p_ec = model.add_lookup_parameters(SRC_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
         p_c = model.add_lookup_parameters(TGT_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
