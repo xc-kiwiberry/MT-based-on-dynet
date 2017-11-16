@@ -67,7 +67,8 @@ public:
                             unsigned HIDDEN_DIM,
                             unsigned ATTENTION_SIZE,
                             unsigned SRC_VOCAB_SIZE,
-                            unsigned TGT_VOCAB_SIZE) :
+                            unsigned TGT_VOCAB_SIZE,
+                            float init_val) :
         INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM), TGT_VOCAB_SIZE(TGT_VOCAB_SIZE),
         dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, model),
         fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, model),
