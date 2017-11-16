@@ -32,6 +32,10 @@ using namespace dynet;
 template <class Builder>
 struct EncoderDecoder {
 private:
+    unsigned INPUT_DIM;
+    unsigned HIDDEN_DIM;
+    
+
     Builder dec_builder;     // GRU
     Builder fwd_enc_builder;
     Builder bwd_enc_builder;
@@ -64,6 +68,7 @@ public:
                             unsigned SRC_VOCAB_SIZE,
                             unsigned TGT_VOCAB_SIZE,
                             float init_val) :
+        INPUT_DIM(INPUT_DIM), HIDDEN_DIM(HIDDEN_DIM),
         dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, init_val, model),
         fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model),
         bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model) {
