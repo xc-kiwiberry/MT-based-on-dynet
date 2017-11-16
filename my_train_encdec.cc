@@ -157,14 +157,14 @@ int main(int argc, char** argv) {
   cerr << "create optimizer success." << endl;
 
   // Create model
-  EncoderDecoder<GRUBuilder> lm(model,
-                                 params.LAYERS,
-                                 params.INPUT_DIM,
-                                 params.HIDDEN_DIM,
-                                 params.ATTENTION_SIZE,
-                                 SRC_VOCAB_SIZE,
-                                 TGT_VOCAB_SIZE,
-                                 0.08);
+  EncoderDecoder lm(model,
+                    params.LAYERS,
+                    params.INPUT_DIM,
+                    params.HIDDEN_DIM,
+                    params.ATTENTION_SIZE,
+                    SRC_VOCAB_SIZE,
+                    TGT_VOCAB_SIZE,
+                    0.08);
   
   // Load preexisting weights (if provided)
   if (params.model_file != "") {

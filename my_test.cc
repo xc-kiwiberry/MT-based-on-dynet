@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 
   // Create model ---------------------------------------------------------------------------------
   ParameterCollection model;
-  EncoderDecoder<GRUBuilder> lm(model,
+  EncoderDecoder lm(model,
                                  params.LAYERS,
                                  params.INPUT_DIM,
                                  params.HIDDEN_DIM,
