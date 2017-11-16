@@ -6,11 +6,12 @@
 #include "dynet/lstm.h"
 #include "dynet/expr.h"
 #include "dynet/tensor.h"
-#include "dynet/gru.h"
 #include "dynet/io.h"
+#include "dynet/param-init.h"
 
 #include "my_dict.h"
 #include "my_cl-args.h"
+#include "my_gru.h"
 
 #include <random>
 #include <iostream>
@@ -31,14 +32,6 @@ using namespace dynet;
 template <class Builder>
 struct EncoderDecoder {
 private:
-    // Hyperparameters
-    unsigned LAYERS;
-    unsigned INPUT_DIM;
-    unsigned HIDDEN_DIM;
-    unsigned ATTENTION_SIZE;
-    unsigned SRC_VOCAB_SIZE;
-    unsigned TGT_VOCAB_SIZE;
-
     Builder dec_builder;     // GRU
     Builder fwd_enc_builder;
     Builder bwd_enc_builder;
@@ -64,21 +57,19 @@ public:
     EncoderDecoder() {}
 
     explicit EncoderDecoder(ParameterCollection& model,
-                            unsigned num_layers,
-                            unsigned input_dim,
-                            unsigned hidden_dim,
-                            unsigned attention_size,
-                            unsigned src_vocab_size,
-                            unsigned tgt_vocab_size,
+                            unsigned LAYERS,
+                            unsigned INPUT_DIM,
+                            unsigned HIDDEN_DIM,
+                            unsigned ATTENTION_SIZE,
+                            unsigned SRC_VOCAB_SIZE,
+                            unsigned TGT_VOCAB_SIZE,
                             float init_val) :
-        LAYERS(num_layers), INPUT_DIM(input_dim), HIDDEN_DIM(hidden_dim), ATTENTION_SIZE(attention_size),
-        SRC_VOCAB_SIZE(src_vocab_size), TGT_VOCAB_SIZE(tgt_vocab_size),
-        dec_builder(num_layers, input_dim + hidden_dim * 2, hidden_dim, model),
-        fwd_enc_builder(num_layers, input_dim, hidden_dim, model),
-        bwd_enc_builder(num_layers, input_dim, hidden_dim, model) {
+        dec_builder(LAYERS, INPUT_DIM + HIDDEN_DIM * 2, HIDDEN_DIM, init_val, model),
+        fwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model),
+        bwd_enc_builder(LAYERS, INPUT_DIM, HIDDEN_DIM, init_val, model) {
 
-        p_ec = model.add_lookup_parameters(SRC_VOCAB_SIZE, {INPUT_DIM});
-        p_c = model.add_lookup_parameters(TGT_VOCAB_SIZE, {INPUT_DIM});
+        p_ec = model.add_lookup_parameters(SRC_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
+        p_c = model.add_lookup_parameters(TGT_VOCAB_SIZE, {INPUT_DIM}, ParameterInitUniform(init_val));
 
         p_hid2hid = model.add_parameters( { HIDDEN_DIM, HIDDEN_DIM }, init_val);
         p_b_hid = model.add_parameters( { HIDDEN_DIM }, init_val);
@@ -115,7 +106,7 @@ public:
                 x_t[i] = isents[id + i][t];
                 x_m[i] = x_mask[id + i][t];
             }
-            i_x_t[t] = lookup(cg, p_ec, x_t);
+            i_x_t[t] = dropout(lookup(cg, p_ec, x_t), 0.2);
             mask[t] = input(cg, Dim({1}, bsize), x_m);
         }
 
@@ -239,14 +230,14 @@ public:
                 y_m.push_back(y_mask[id + i][t]);
             }
             // 
-            last_output_embeddings = lookup(cg, p_c, next_y_t);
+            last_output_embeddings = dropout(lookup(cg, p_c, next_y_t), 0.2);
             dec_builder.add_input( concatenate({ context, last_output_embeddings }) );
         }
 
         Expression i_r_t = affine_transform({readout_offset,
                                             readout_allthree, concatenate_to_batch(concat_vector)});
 
-        Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
+        Expression prob_vocab = affine_transform({b_voc, hid2voc, dropout(i_r_t, 0.2)});
         Expression i_err = pickneglogsoftmax(prob_vocab, y_t);
         Expression mask = input(cg, Dim({1}, bsize * oslen), y_m);
         
@@ -375,18 +366,20 @@ public:
             dec_builder.add_input( concatenate({new_context, last_output_embeddings}) );
 
         }
+        
+        // length normalization
+        for (int i = 0; i < final_loss.size(); i++){
+            final_loss[i] /= final_result[i].size();
+        }
 
-        if (final_result.size() > 0)
+        if (final_result.size() > 0) {
             return final_result[min_element(final_loss.begin(),final_loss.end())-final_loss.begin()];
-        else { //if (beam_size >= 100) {
+        }
+        else { 
             miss++;
             //cerr << "cannot find translation in max beam size " << beam_size << endl;
             return result[0];
         }
-        //else {
-        //    cout << "cannot find translation in beam size " << beam_size << " try " << beam_size*2 << endl;
-        //    return generate(encoded, oslen, cg, beam_size*2);
-        //}
     }
 
     /**

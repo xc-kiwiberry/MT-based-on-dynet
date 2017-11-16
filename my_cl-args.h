@@ -43,6 +43,7 @@ struct Params {
 
   bool debug_info = false;
   //double learning_rate = 0.0005;
+  unsigned sent_length_limit = 50;
 
   // MRT
   bool mrt_enable = false;
@@ -238,6 +239,14 @@ void get_args(int argc,
       }
       istringstream d(argv[i + 1]);
       d >> params.TGT_DIC_LIM;
+      i++;
+    } else if (arg == "--sent_length_limit") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.sent_length_limit;
       i++;
     } /*else if (arg == "--learning_rate") {
       if (i + 1 == argc) {

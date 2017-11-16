@@ -100,7 +100,8 @@ int main(int argc, char** argv) {
 
   for (int i = 0; i < training.size(); i++) {
     if (training[i].size() <= 1 || training_label[i].size() <= 1) continue;
-    if (training[i].size() > 50 || training_label[i].size() > 50) continue;
+    if (training[i].size() > params.sent_length_limit || 
+          training_label[i].size() > params.sent_length_limit) continue;
 	  train_data.push_back(pp(training[i], training_label[i]));
   }
 
@@ -138,24 +139,20 @@ int main(int argc, char** argv) {
 
   double ratioTrain = fGiveMaskAndCalcCov(training, train_mask);              
   double ratioTrainLabel = fGiveMaskAndCalcCov(training_label, train_label_mask); 
-  //int countSize = fCountSize(training) + fCountSize(training_label) + fCountSize(dev);
-  //cerr << "corpus data after processed : " << countSize*sizeof(int)/1024/1024 << "MB" << endl;
   cerr << "corpus processed successfully. " << endl;
   cerr << "In training set, Dictionary covers " << setprecision(3) << ratioTrain << "% words." << endl;
   cerr << "In training_label set, Dictionary covers " << setprecision(3) << ratioTrainLabel << "% words." << endl;
 
-  //cerr << "corpus_test ended." << endl;
-  //return 0;
-
   // Initialize model and trainer ------------------------------------------------------------------
   ParameterCollection model;
   // Use adam optimizer
-  //double init_learning_rate = params.learning_rate;
+  double init_learning_rate;
   if (params.mrt_enable) init_learning_rate = 0.00001; // MRT
   else init_learning_rate = 0.0005; // MLE
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   adam.sparse_updates_enabled = false;
   double slow_start = 0.998;
+  double lr_decay = 1.0;
 
   cerr << "create optimizer success." << endl;
 
@@ -185,6 +182,7 @@ int main(int argc, char** argv) {
   cerr << "params.BATCH_SIZE = " << params.BATCH_SIZE << endl;
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
+  cerr << "params.sent_length_limit = " << params.sent_length_limit << endl;
   if (params.mrt_enable){
     cerr << "params.mrt_sampleSize = " << params.mrt_sampleSize << endl;
     cerr << "params.mrt_lenRatio = " << params.mrt_lenRatio << endl;
@@ -200,8 +198,7 @@ int main(int argc, char** argv) {
   srand(time(0));
   random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
-  //int epoch = 0;
-  int cnt_batches = 1;
+  unsigned iters = 1;
   double best_bleu = 0;
   // Initialize loss 
   double loss = 0;
@@ -211,10 +208,15 @@ int main(int argc, char** argv) {
   cerr << endl << "start training" << endl;
   // register signal 
   signal(SIGINT, handleInt);
+  // open log
+  ofstream ofs_log("log_" + params.exp_name, ios::out|ios::app);
+  ofs_log << endl << "Iteration\t\tloss\t\tbleu\t\tbest" <<endl;
+  ofs_log << "----------------------------------------------------" << endl;
+  mkdir("models", 0755);
 
   // Run indefinitely
   while (true) {
-    for (unsigned si = 0; si < num_batches; ++si, ++cnt_batches) {
+    for (unsigned si = 0; si < num_batches; ++si, ++iters) {
       // train a batch
       if (params.mrt_enable){ // MRT
         const vector<int>& ref_sent = training_label[order[si]];
@@ -277,14 +279,14 @@ int main(int argc, char** argv) {
 
       // Update parameters, adam slow start
       slow_start *= 0.998;
-      adam.learning_rate = init_learning_rate * (1 - slow_start);
+      adam.learning_rate = init_learning_rate * (1 - slow_start) * lr_decay;
       adam.update();
       // print info
       for (auto k = 0 ; k < 100; ++k) cerr << "\b";
-      cerr << "already processed " << cnt_batches << " batches, " << cnt_batches*params.BATCH_SIZE << " lines."; // << endl;
+      cerr << "already processed " << iters << " batches, " << iters*params.BATCH_SIZE << " lines."; // << endl;
 
       // Print progress every (print_freq) batches
-      if (cnt_batches % params.print_freq == 0) {
+      if (iters % params.print_freq == 0) {
         // Print informations
         cerr << endl;
         cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
@@ -295,7 +297,7 @@ int main(int argc, char** argv) {
         loss = 0;
       }
       // valid & save ---------------------------
-      if (cnt_batches % params.save_freq == 0){
+      if (iters % params.save_freq == 0){
         cerr << endl << "start validation..." << endl;
         // translation
         ofstream ofs_dev_trans(".tmp_dev_trans");
@@ -324,40 +326,39 @@ int main(int argc, char** argv) {
         sscanf(bleu_str.substr(7, 5).c_str(), "%lf", &cur_bleu);
         // valid info
         ostringstream valid_info_ss;
-        valid_info_ss << "valid " << (cnt_batches/params.save_freq) << ":"
+        valid_info_ss << "iters = " << iters << ":"
             << " loss/batch = " << (sum_loss * params.BATCH_SIZE / params.save_freq)
             << ", cur_bleu = " << cur_bleu
             << ", best_bleu = " << max(cur_bleu, best_bleu)
             << endl;
         cerr << valid_info_ss.str();
+        // print log
+        ofs_log << iters << "\t" << (sum_loss * params.BATCH_SIZE / params.save_freq) << "\t"
+                << cur_bleu << "\t" << max(cur_bleu, best_bleu) << endl;
         // save best model
-        mkdir("models", 0755);
-        TextFileSaver saver("models//.tmp.params");
-        saver.save(model);
-        ostringstream model_name_ss;
-        model_name_ss 
-            << "models//"
-            << params.exp_name 
-            << '_' << params.LAYERS
-            << '_' << params.INPUT_DIM
-            << '_' << params.HIDDEN_DIM 
-            << ".params";
         if (best_bleu < cur_bleu){
           best_bleu = cur_bleu;
-          //TextFileSaver saver(model_name_ss.str());
-          //saver.save(model);
-          string cmd = "mv models/.tmp.params " + model_name_ss.str();
-          system(cmd.c_str());
+          ostringstream model_name_ss;
+          model_name_ss
+              << "models//" << params.exp_name << "_best.params";
+          TextFileSaver saver(model_name_ss.str());
+          saver.save(model);
+          cerr << "save model: " << model_name_ss.str() << " success." << endl;
+        }
+        // save checkpoint model
+        if (iters % (params.save_freq*10) == 0) {
+          ostringstream model_name_ss;
+          model_name_ss << "models//" << params.exp_name << "_iter_" << iters << ".params";
+          TextFileSaver saver(model_name_ss.str());
+          saver.save(model);
           cerr << "save model: " << model_name_ss.str() << " success." << endl;
         }
         cerr << endl;
-        // print log
-        ofstream ofs_log("log", ios::out|ios::app);
-        ofs_log << valid_info_ss.str();
         // Reinitialize sum_loss
         sum_loss = 0;
       }
     }
+    lr_decay /= 2;
   }
 
   // Free memory
