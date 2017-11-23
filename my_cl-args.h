@@ -248,7 +248,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.sent_length_limit;
       i++;
-    } /*else if (arg == "--learning_rate") {
+    } else if (arg == "--learning_rate") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -256,7 +256,7 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.learning_rate;
       i++;
-    } */else {
+    } else {
       std::cerr << "No matching argument for " << arg << std::endl;
       abort();
     }
