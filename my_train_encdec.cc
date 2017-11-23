@@ -149,6 +149,7 @@ int main(int argc, char** argv) {
   double init_learning_rate;
   if (params.mrt_enable) init_learning_rate = 0.00001; // MRT
   else init_learning_rate = 0.0005; // MLE
+  if (params.learning_rate > 1e-8) init_learning_rate = params.learning_rate;
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   adam.sparse_updates_enabled = false;
   double slow_start = 0.998;
@@ -183,6 +184,7 @@ int main(int argc, char** argv) {
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
   cerr << "params.sent_length_limit = " << params.sent_length_limit << endl;
+  cerr << "params.learning_rate = " << params.learning_rate << endl;
   if (params.mrt_enable){
     cerr << "params.mrt_sampleSize = " << params.mrt_sampleSize << endl;
     cerr << "params.mrt_lenRatio = " << params.mrt_lenRatio << endl;
