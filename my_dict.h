@@ -174,21 +174,21 @@ void getMRTBatch(const vector<int>& ref_sent, vector<vector<int>>& hyp_sents, ve
     }
     sent.push_back(kEOS);
   }
+  // add ref_sent to hyp_sents
+  hyp_sents.push_back(ref_sent);
   // unique
   sort(hyp_sents.begin(), hyp_sents.end());
   hyp_sents.erase( unique(hyp_sents.begin(), hyp_sents.end()), hyp_sents.end() );
-  for (int i = 0; i < hyp_sents.size(); i++){
-    if (kEOS == hyp_sents[i][0]) {
-      hyp_sents.erase(hyp_sents.begin()+i);
-      break;
-    }
-  }
+    //empty hyp_sent should be 0.0 bleu, not del it 
+    /*for (int i = 0; i < hyp_sents.size(); i++){
+      if (kEOS == hyp_sents[i][0]) {
+        hyp_sents.erase(hyp_sents.begin()+i);
+        break;
+      }
+    }//*/
   // calc bleu
   hyp_bleu.clear();
   hyp_bleu = calcBleu(hyp_sents, ref_sent);
-  // add ref_sent to hyp_sents
-  hyp_sents.push_back(ref_sent);
-  hyp_bleu.push_back(1.0);
   // add padding
   unsigned maxLength = 0;
   for (auto& sent: hyp_sents){
