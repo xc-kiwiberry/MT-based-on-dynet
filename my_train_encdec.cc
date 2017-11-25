@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
   cerr << "params.print_freq = " << params.print_freq << endl;
   cerr << "params.save_freq = " << params.save_freq << endl;
   cerr << "params.sent_length_limit = " << params.sent_length_limit << endl;
-  cerr << "params.learning_rate = " << params.learning_rate << endl;
+  cerr << "init_learning_rate = " << init_learning_rate << endl;
   if (params.mrt_enable){
     cerr << "params.mrt_sampleSize = " << params.mrt_sampleSize << endl;
     cerr << "params.mrt_lenRatio = " << params.mrt_lenRatio << endl;
