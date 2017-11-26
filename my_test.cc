@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < test.size(); i++) {
     ComputationGraph cg;
     Timer* iteration = new Timer("completed in");
-    vector<unsigned> res = lm.generate(test[i], miss, cg, 20);
+    vector<unsigned> res = lm.generate(test[i], miss, cg, params.beam_size);
     cerr << ++cnt << " : ";
     delete iteration;
     if (params.debug_info){
