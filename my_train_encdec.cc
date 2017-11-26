@@ -214,6 +214,7 @@ int main(int argc, char** argv) {
   ofstream ofs_log("log_" + params.exp_name, ios::out|ios::app);
   ofs_log << endl << "Iteration\tloss\t\tbleu\tbest" <<endl;
   ofs_log << "----------------------------------------------------" << endl;
+  ofs_log.close();
   mkdir("models", 0755);
 
   // Run indefinitely
@@ -335,8 +336,10 @@ int main(int argc, char** argv) {
             << endl;
         cerr << valid_info_ss.str();
         // print log
+        ofstream ofs_log("log_" + params.exp_name, ios::out|ios::app);
         ofs_log << iters << "\t\t" << (sum_loss * params.BATCH_SIZE / params.save_freq) << "\t\t"
                 << cur_bleu << "\t" << max(cur_bleu, best_bleu) << endl;
+        ofs_log.close();
         // save best model
         if (best_bleu < cur_bleu){
           best_bleu = cur_bleu;

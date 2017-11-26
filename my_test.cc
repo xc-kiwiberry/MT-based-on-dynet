@@ -1,4 +1,3 @@
-
 #include "my_encdec.h"
 #include "stdlib.h"
 
@@ -38,13 +37,13 @@ int main(int argc, char** argv) {
   // Create model ---------------------------------------------------------------------------------
   ParameterCollection model;
   EncoderDecoder lm(model,
-                                 params.LAYERS,
-                                 params.INPUT_DIM,
-                                 params.HIDDEN_DIM,
-                                 params.ATTENTION_SIZE,
-                                 SRC_VOCAB_SIZE,
-                                 TGT_VOCAB_SIZE,
-                                 0.08);
+                    params.LAYERS,
+                    params.INPUT_DIM,
+                    params.HIDDEN_DIM,
+                    params.ATTENTION_SIZE,
+                    SRC_VOCAB_SIZE,
+                    TGT_VOCAB_SIZE,
+                    0.08);
 
   // Load model ---------------------------------------------------------------------------------
   TextFileLoader loader(params.model_file);
@@ -54,12 +53,7 @@ int main(int argc, char** argv) {
   // Translate ---------------------------------------------------------------------------------
   mkdir("test", 0755);
   ostringstream trans_out_ss;
-  trans_out_ss << "test//test" 
-  	 << "_" << params.exp_name
-     << "_" << params.LAYERS 
-     << "_" << params.INPUT_DIM
-     << "_" << params.HIDDEN_DIM
-     << ".out";
+  trans_out_ss << "test//" << params.exp_name << ".out";
   ofstream fout(trans_out_ss.str());
   cerr << "translation will be saved in " << trans_out_ss.str() << endl;
 
@@ -67,7 +61,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < test.size(); i++) {
     ComputationGraph cg;
     Timer* iteration = new Timer("completed in");
-    vector<unsigned> res = lm.generate(test[i], miss, cg);
+    vector<unsigned> res = lm.generate(test[i], miss, cg, 20);
     cerr << ++cnt << " : ";
     delete iteration;
     if (params.debug_info){
