@@ -268,8 +268,8 @@ public:
     /**
      * Generate a sentence from an input sentence
      */
-    vector<unsigned> generate(const vector<int>& insent, int& miss, ComputationGraph & cg) {
-        return generate(encode(insent, cg), 3 * insent.size() - 1, miss, cg);
+    vector<unsigned> generate(const vector<int>& insent, int& miss, ComputationGraph & cg, int beam_size = 10) {
+        return generate(encode(insent, cg), 3 * insent.size() - 1, miss, cg, beam_size);
     }
 
     /**
