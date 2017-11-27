@@ -10,7 +10,7 @@
 #include "dynet/param-init.h"
 //#include "dynet/gru.h"
 
-#include "my_dict.h"
+#include "my_tools.h"
 #include "my_cl-args.h"
 #include "my_gru.h"
 
@@ -413,7 +413,7 @@ public:
         print_dim(init.dim());
         init = pick_batch_elems(init, vector<unsigned>(params.mrt_sampleSize, 0)); // make {hid} to ({hid},sample_size)
         print_dim(init.dim());
-        
+
         // init dec_builder
         dec_builder.new_graph(cg);
         dec_builder.start_new_sequence(vector<Expression>(1, init));

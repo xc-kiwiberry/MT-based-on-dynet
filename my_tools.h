@@ -1,5 +1,5 @@
-#ifndef MY_DICT_H 
-#define MY_DICT_H 
+#ifndef MY_TOOLS_H 
+#define MY_TOOLS_H 
 
 #include <unordered_map>
 #include <string>
@@ -107,6 +107,47 @@ void read_corpus(const string &fileName, const string varName, Dict &dict, vecto
     token_cnt += vec.back().size();
   }
   cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
+}
+
+// Sort sentences in descending order of length
+bool comp(const pp& aa, const pp& bb) {
+  return aa.first.size() > bb.first.size();
+}
+
+int fCountSize(const vector<vector<int>>& lines){
+  int cnt = 0;
+  for (const auto & line : lines) cnt += line.size();
+  return cnt;
+}
+
+double fGiveMaskAndCalcCov(const vector<vector<int>>& lines, vector<vector<float>>& mask) {
+  int cntUnk = 0, cntAll = 0;
+  for (int i = 0; i < lines.size(); i++) {
+    cntAll += lines[i].size();
+    mask.push_back(vector<float>());
+    assert(lines[i].size() >= 2);
+    mask[i].push_back(1.);
+    if (lines[i][0] == kUNK) cntUnk++;
+    for (int j = 1; j < lines[i].size(); j++) {
+      if (lines[i][j-1] != kEOS) mask[i].push_back(1.);
+      else mask[i].push_back(0.);
+      if (lines[i][j] == kUNK) cntUnk++;
+    }
+  }
+  return 100. - 100.*cntUnk/cntAll;
+}
+
+void print_dim(const Dim& d){
+  cout<<"({"<<d.d[0];
+  for (int i=1;i<d.nd;i++){
+    cout<<","<<d.d[i];
+  }
+  cout<<"},"<<d.bd<<"}"<<endl;
+}
+
+void debug(const Expression& x) {
+  print_dim(x.dim());
+  cout<<x.value()<<endl;
 }
 
 vector<float> calcBleu(const vector<vector<int>>& sample_sents, const vector<int>& ref_sent, const int n = 4) {
