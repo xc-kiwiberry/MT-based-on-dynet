@@ -1,6 +1,17 @@
 #ifndef MY_TOOLS_H 
 #define MY_TOOLS_H 
 
+#include "dynet/nodes.h"
+#include "dynet/dynet.h"
+#include "dynet/training.h"
+#include "dynet/timing.h"
+#include "dynet/rnn.h"
+#include "dynet/lstm.h"
+#include "dynet/expr.h"
+#include "dynet/tensor.h"
+#include "dynet/io.h"
+#include "dynet/param-init.h"
+
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -8,6 +19,7 @@
 #include <cmath>
 
 using namespace std;
+using namespace dynet;
 
 const int kEOS = 0;
 const int kUNK = 1;
