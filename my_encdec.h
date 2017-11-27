@@ -455,6 +455,7 @@ public:
             Expression tmp = concatenate({context, last_output_embeddings});
             print_dim(tmp.dim());
             dec_builder.add_input( tmp );
+            cerr<<endl;
         }
 
         return hyp_sents;
