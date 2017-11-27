@@ -121,6 +121,7 @@ void read_corpus(const string &fileName, const string varName, Dict &dict, vecto
   cerr << line_cnt << " lines, " << token_cnt << " tokens" << endl;
 }
 
+typedef pair<vector<int>, vector<int>> pp;
 // Sort sentences in descending order of length
 bool comp(const pp& aa, const pp& bb) {
   return aa.first.size() > bb.first.size();

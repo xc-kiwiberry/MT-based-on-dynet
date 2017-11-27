@@ -3,7 +3,7 @@
 using namespace std;
 using namespace dynet;
 
-typedef pair<vector<int>, vector<int>> pp;
+
 
 static void handleInt(int sig){
   cerr << endl << "end training success." << endl;
