@@ -410,9 +410,7 @@ public:
         Expression w1dt = w1 * input_mat;
 
         Expression init = tanh(affine_transform({b_hid, hid2hid, encoded[0]})); 
-        print_dim(init.dim());
-        init = pick_batch_elems(init, vector<unsigned>(params.mrt_sampleSize, 0)); // make {hid} to ({hid},sample_size)
-        print_dim(init.dim());
+        //init = pick_batch_elems(init, vector<unsigned>(params.mrt_sampleSize, 0)); // make {hid} to ({hid},sample_size)
 
         // init dec_builder
         dec_builder.new_graph(cg);
@@ -420,15 +418,12 @@ public:
         
         // zero embedding
         Expression last_output_embeddings = zeroes(cg, Dim({INPUT_DIM}, params.mrt_sampleSize));
-        print_dim(last_output_embeddings.dim());
         vector<vector<int>> hyp_sents(params.mrt_sampleSize, vector<int>());
 
         unsigned sample_lenth = params.mrt_lenRatio * ref_len;
         for (int t = 0; t < sample_lenth; ++t) {
             Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
-            print_dim(context.dim());
             Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
-            print_dim(concat_vector.dim());
             Expression i_r_t = affine_transform({readout_offset, 
                                                 readout_allthree, concat_vector});
 
@@ -450,12 +445,7 @@ public:
             }
 
             last_output_embeddings = lookup(cg, p_c, ids);
-            print_dim(last_output_embeddings.dim());
-            print_dim(dec_builder.back().dim());
-            Expression tmp = concatenate({context, last_output_embeddings});
-            print_dim(tmp.dim());
-            dec_builder.add_input( tmp );
-            cerr<<endl;
+            dec_builder.add_input(concatenate({context, last_output_embeddings}));
         }
 
         return hyp_sents;

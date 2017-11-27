@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
   ParameterCollection model;
   // Use adam optimizer
   double init_learning_rate;
-  if (params.mrt_enable) init_learning_rate = 0.00001; // MRT
-  else init_learning_rate = 0.0005; // MLE
+  if (params.mrt_enable) init_learning_rate = 1e-5; // MRT
+  else init_learning_rate = 5e-4; // MLE
   if (params.learning_rate > 1e-8) init_learning_rate = params.learning_rate;
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   adam.sparse_updates_enabled = false;
@@ -249,7 +249,8 @@ int main(int argc, char** argv) {
       if (iters % params.print_freq == 0) {
         // Print informations
         cerr << endl;
-        cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq) << " ";
+        cerr << "loss/batches = " << (loss * params.BATCH_SIZE / params.print_freq)
+             << ", lr = " << adam.learning_rate << " ";
         // Reinitialize timer
         delete iteration;
         iteration = new Timer("completed in");
