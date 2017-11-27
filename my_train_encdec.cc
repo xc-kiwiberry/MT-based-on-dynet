@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
 
       // Update parameters, adam slow start
       slow_start *= 0.998;
-      adam.eta = init_learning_rate * (1 - slow_start) * lr_decay;
+      adam.learning_rate = init_learning_rate * (1 - slow_start) * lr_decay;
       adam.update();
       // print info
       for (auto k = 0 ; k < 100; ++k) cerr << "\b";
