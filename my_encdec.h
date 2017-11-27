@@ -410,7 +410,9 @@ public:
         Expression w1dt = w1 * input_mat;
 
         Expression init = tanh(affine_transform({b_hid, hid2hid, encoded[0]})); 
-        init = pick_batch_elems(init, vector<unsigned>(params.mrt_sampleSize, 0)); //make {hid} to ({hid},sample_size)
+        print_dim(init.dim());
+        init = pick_batch_elems(init, vector<unsigned>(params.mrt_sampleSize, 0)); // make {hid} to ({hid},sample_size)
+        print_dim(init.dim());
         
         // init dec_builder
         dec_builder.new_graph(cg);
