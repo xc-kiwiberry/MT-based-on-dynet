@@ -180,7 +180,7 @@ public:
         Expression unnormalized = transpose(v * tanh(colwise_add(w1dt, w2dt))); // (|F|,1)
         Expression att_weights = softmax(cmult(unnormalized, xmask)); // (|F|,1)
         Expression context = input_mat * att_weights; // (2*hidden_dim,1)
-        return context;
+        return reshape(context, Dim({2*HIDDEN_DIM}, context.dim().bd);
     }
     /**
      * Batched decoding
@@ -433,7 +433,7 @@ public:
                                                 readout_allthree, concat_vector});
 
             Expression prob_vocab = affine_transform({b_voc, hid2voc, i_r_t});
-            vector<float> probs = as_vector(softmax(prob_vocab).value()); 
+            vector<float> probs = as_vector((softmax(prob_vocab)).value()); 
 
             // ramdom sample
             vector<float> randomNum = as_vector(random_uniform(cg, {params.mrt_sampleSize}, 0.0, 1.0).value());
@@ -452,7 +452,9 @@ public:
             last_output_embeddings = lookup(cg, p_c, ids);
             print_dim(last_output_embeddings.dim());
             print_dim(dec_builder.back().dim());
-            dec_builder.add_input( concatenate({context, last_output_embeddings}) );
+            Expression tmp = concatenate({context, last_output_embeddings});
+            print_dim(tmp.dim());
+            dec_builder.add_input( tmp );
         }
 
         return hyp_sents;
