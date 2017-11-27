@@ -3,8 +3,6 @@
 using namespace std;
 using namespace dynet;
 
-
-
 static void handleInt(int sig){
   cerr << endl << "end training success." << endl;
   exit(0);
