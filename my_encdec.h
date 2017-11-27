@@ -180,7 +180,7 @@ public:
         Expression unnormalized = transpose(v * tanh(colwise_add(w1dt, w2dt))); // (|F|,1)
         Expression att_weights = softmax(cmult(unnormalized, xmask)); // (|F|,1)
         Expression context = input_mat * att_weights; // (2*hidden_dim,1)
-        return reshape(context, Dim({2*HIDDEN_DIM}, context.dim().bd);
+        return reshape(context, Dim({2*HIDDEN_DIM}, context.dim().bd));
     }
     /**
      * Batched decoding
