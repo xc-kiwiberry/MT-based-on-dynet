@@ -271,8 +271,9 @@ public:
         
         // Run on output sentence
         for (int t = 0; t < oslen; ++t) {
-
-            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
+            Expression context;
+            if (encoded.size() > 2) context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
+            else context = attend(input_mat, dec_builder.final_s(), w1dt, cg);
             concat_vector[t] = concatenate( { context, last_output_embeddings, dec_builder.back() } );
             
             //Expression maxout = max_dim(reshape(i_r_t, Dim({HIDDEN_DIM/2, 2}, bsize)), 1);

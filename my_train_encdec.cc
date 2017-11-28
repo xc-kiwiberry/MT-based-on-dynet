@@ -179,10 +179,11 @@ int main(int argc, char** argv) {
     for (unsigned si = 0; si < num_batches; ++si, ++iters) {
       // train a batch
       if (params.mrt_enable){ // MRT
+        const vector<int>& src_sent = training[order[si]];
         const vector<int>& ref_sent = training_label[order[si]];
         // sample
         ComputationGraph cg;
-        vector<Expression> encoding = lm.encode(training[order[si]], cg);
+        vector<Expression> encoding = lm.encode(src_sent, cg);
         vector<vector<int>> hyp_sents = lm.sample(encoding, ref_sent.size(), cg);
         cg.clear();
         // process samples
@@ -192,8 +193,8 @@ int main(int argc, char** argv) {
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
         // decode
-        encoding = lm.encode(training[order[si]], cg);
-        Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
+        vector<Expression> encoding2 = lm.encode(src_sent, cg);
+        Expression loss_expr = lm.decode(encoding2, hyp_sents, hyp_masks, 0, sampleNum, cg);
         // calc loss
         loss_expr = reshape(loss_expr, {sampleNum, sentLen});
         loss_expr = transpose(loss_expr);
