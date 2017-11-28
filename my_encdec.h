@@ -148,7 +148,7 @@ public:
         }
 
         // Collect encodings -----------------------------------------------------------------------
-        reverse(bwd_vectors.begin(), bwd_vectors.end()); ///!!!!don't forget
+        reverse(bwd_vectors.begin(), bwd_vectors.end()); 
         Expression init = bwd_vectors[0];
         
         vector<Expression> encoded;
@@ -163,13 +163,45 @@ public:
      * Single encode
      */
     vector<Expression> encode(const vector<int>& insent, ComputationGraph & cg) {
-        vector<float> mask(insent.size(), 1.);
-        auto insents = vector<vector<int>>(1, insent);
-        auto masks = vector<vector<float>>(1, mask);
-        return encode(insents, masks, 0, 1, cg);
+        // Set variables for the input sentence
+        const unsigned islen = insent.size();
+        vector<Expression> i_x_t(islen);
+        for (int t = 0; t < islen; ++t) {
+            i_x_t[t] = dropout(lookup(cg, p_ec, insent[t]), 0.2);
+        }
+
+        // Forward encoder -------------------------------------------------------------------------
+        fwd_enc_builder.new_graph(cg);
+        fwd_enc_builder.start_new_sequence();
+        vector<Expression> fwd_vectors; 
+        for (int t = 0; t < islen; ++t) {
+            Expression i_back = fwd_enc_builder.add_input(i_x_t[t]);
+            fwd_vectors.push_back(i_back);
+        }
+
+        // Backward encoder ------------------------------------------------------------------------
+        bwd_enc_builder.new_graph(cg);
+        bwd_enc_builder.start_new_sequence();
+        vector<Expression> bwd_vectors;
+        for (int t = islen - 1; t >= 0; --t) {
+            Expression i_back = bwd_enc_builder.add_input(i_x_t[t]);
+            bwd_vectors.push_back(i_back);
+        }
+
+        // Collect encodings -----------------------------------------------------------------------
+        reverse(bwd_vectors.begin(), bwd_vectors.end());
+        Expression init = bwd_vectors[0];
+        
+        vector<Expression> encoded;
+        for (int t = 0; t < islen; ++t) {
+            encoded.push_back( concatenate( {fwd_vectors[t], bwd_vectors[t]} ) );    //bi-lstm encoding
+        }
+
+        return { init, concatenate_cols(encoded) }; 
     }
+
     /**
-     * attend
+     * attend (masked)
      */
     Expression attend(const Expression& input_mat, const vector<Expression>& state, const Expression& w1dt, const Expression& xmask, ComputationGraph& cg) {
         // w1dt -> (att,|F|)
@@ -182,6 +214,22 @@ public:
         Expression context = input_mat * att_weights; // (2*hidden_dim,1)
         return reshape(context, Dim({2*HIDDEN_DIM}, context.dim().bd));
     }
+
+    /**
+     * attend
+     */
+     Expression attend(const Expression& input_mat, const vector<Expression>& state, const Expression& w1dt, ComputationGraph& cg) {
+        // w1dt -> (att,|F|)
+        //att_weights=v∗tanh(encodedInput*w1+decoderstate*w2)
+        Expression w2 = parameter(cg, attention_w2); // (att,hidden_dim*layers*x) , x=1 for GRU, x=2 for lstm 
+        Expression v = parameter(cg, attention_v);   // (1,att)
+        Expression w2dt = w2 * concatenate(state); // (att,1)
+        Expression unnormalized = transpose(v * tanh(colwise_add(w1dt, w2dt))); // (|F|,1)
+        Expression att_weights = softmax(unnormalized); // (|F|,1)
+        Expression context = input_mat * att_weights; // (2*hidden_dim,1)
+        return reshape(context, Dim({2*HIDDEN_DIM}, context.dim().bd));
+    }
+
     /**
      * Batched decoding
      */
@@ -266,21 +314,14 @@ public:
     }
 
     /**
-     * Generate a sentence from an input sentence
-     */
-    vector<unsigned> generate(const vector<int>& insent, int& miss, ComputationGraph & cg, int beam_size = 10) {
-        return generate(encode(insent, cg), 3 * insent.size() - 1, miss, cg, beam_size);
-    }
-
-    /**
      * Generate a sentence from an encoding
      */
-    vector<unsigned> generate(const vector<Expression>& encoded, 
-                            const unsigned& oslen, 
+    vector<unsigned> generate(const vector<int>& insent,
                             int& miss, 
                             ComputationGraph & cg, 
                             int beam_size = 10) {
-
+        const vector<Expression>& encoded = encode(insent, cg);
+        const unsigned& oslen = 3 * insent.size() - 1;
         // parameter
         Expression hid2hid = parameter(cg, p_hid2hid);
         Expression b_hid = parameter(cg, p_b_hid);
@@ -314,7 +355,7 @@ public:
         Expression last_output_embeddings = zeroes(cg, {INPUT_DIM});
 
         for (int t = 0; t < oslen; ++t) {
-            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
+            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, cg);
             Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
             Expression i_r_t = affine_transform({readout_offset, 
                                                 readout_allthree, concat_vector});
@@ -382,7 +423,7 @@ public:
         }
         else { 
             miss++;
-            //cerr << "cannot find translation in max beam size " << beam_size << endl;
+            //cerr << "cannot find translation in beam size " << beam_size << endl;
             return result[0];
         }
     }
@@ -422,7 +463,7 @@ public:
 
         unsigned sample_lenth = params.mrt_lenRatio * ref_len;
         for (int t = 0; t < sample_lenth; ++t) {
-            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, encoded[2], cg);
+            Expression context = attend(input_mat, dec_builder.final_s(), w1dt, cg);
             Expression concat_vector = concatenate( {context, last_output_embeddings, dec_builder.back() }); 
             Expression i_r_t = affine_transform({readout_offset, 
                                                 readout_allthree, concat_vector});
