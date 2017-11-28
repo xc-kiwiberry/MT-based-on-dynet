@@ -183,8 +183,6 @@ int main(int argc, char** argv) {
         // sample
         ComputationGraph cg;
         vector<Expression> encoding = lm.encode(training[order[si]], cg);
-        auto enc_val0 = as_vector(encoding[0].value()), enc_val1 = as_vector(encoding[1].value());
-        auto enc_dim0 = encoding[0].dim(), enc_dim1 = encoding[1].dim();
         vector<vector<int>> hyp_sents = lm.sample(encoding, ref_sent.size(), cg);
         cg.clear();
         // process samples
@@ -194,7 +192,7 @@ int main(int argc, char** argv) {
         unsigned sampleNum = hyp_sents.size();
         unsigned sentLen = hyp_sents[0].size();
         // decode
-        encoding = {input(cg, enc_dim0, enc_val0), input(cg, enc_dim1, enc_val1)};
+        encoding = lm.encode(training[order[si]], cg);
         Expression loss_expr = lm.decode(encoding, hyp_sents, hyp_masks, 0, sampleNum, cg);
         // calc loss
         loss_expr = reshape(loss_expr, {sampleNum, sentLen});
