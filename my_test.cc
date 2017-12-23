@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
   dynet::initialize(dyparams);
 
   // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
-  Params params;
+  //Params params;
   get_args(argc, argv, params, TEST);
 
   // Dictionary
