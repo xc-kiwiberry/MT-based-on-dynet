@@ -8,7 +8,8 @@
 
 enum Task {
   TRAIN, 
-  TEST 
+  TEST,
+  UNKNOW
 };
 
 /**
@@ -68,7 +69,7 @@ extern Params params;
 void get_args(int argc,
               char** argv,
               Params& params,
-              Task task) {
+              Task task = UNKNOW) {
   int i = 1;
   while (i < argc) {
     string arg = argv[i];
