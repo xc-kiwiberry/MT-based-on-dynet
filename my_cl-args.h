@@ -279,9 +279,9 @@ void get_args(int argc,
       throw invalid_argument(ss.str());
     }
   } else if (task == TEST) { 
-    if (params.model_file == "" || params.train_file == "" || params.train_labels_file == "" || params.test_file == "" || params.test_labels_file == "") {
+    if (params.model_file == "" || params.train_file == "" || params.train_labels_file == "" || params.test_file == "") {
       stringstream ss;
-      ss << "Usage: " << argv[0] << " -m [model_file] -t [train_file] -tl [train_labels_file] -ts [test_file] -tsl [test_labels_file]";
+      ss << "Usage: " << argv[0] << " -m [model_file] -t [train_file] -tl [train_labels_file] -ts [test_file]";
       throw invalid_argument(ss.str());
     }
   }
