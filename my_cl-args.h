@@ -42,7 +42,7 @@ struct Params {
   unsigned save_freq = 2000;
 
   bool debug_info = false;
-  double learning_rate = 0;
+  double learning_rate = -1;
   unsigned sent_length_limit = 50;
   unsigned beam_size = 10;
 

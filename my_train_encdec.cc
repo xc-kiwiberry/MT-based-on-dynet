@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
   double init_learning_rate;
   if (params.mrt_enable) init_learning_rate = 1e-5; // MRT
   else init_learning_rate = 5e-4; // MLE
-  if (params.learning_rate > 1e-8) init_learning_rate = params.learning_rate;
+  if (params.learning_rate > 0) init_learning_rate = params.learning_rate;
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
   adam.sparse_updates_enabled = false;
   double slow_start = 0.998;
