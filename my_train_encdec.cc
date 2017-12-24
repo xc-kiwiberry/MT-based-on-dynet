@@ -108,7 +108,8 @@ int main(int argc, char** argv) {
   else init_learning_rate = 5e-4; // MLE
   if (params.learning_rate > 0) init_learning_rate = params.learning_rate;
   AdamTrainer adam = AdamTrainer(model, init_learning_rate);
-  adam.sparse_updates_enabled = false;
+  //adam.sparse_updates_enabled = false;
+  cerr << "adam.lr=" << adam.learning_rate << endl;
   double slow_start = 0.998;
   double lr_decay = 1.0;
 
