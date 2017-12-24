@@ -6,5 +6,5 @@ g++ my_train_encdec.cc \
 
 g++ my_test.cc \
 -g -std=c++11 \
--o mt_train \
+-o mt_test \
 -L/data/disk2/private/hxc/dynet/build/dynet -ldynet 
