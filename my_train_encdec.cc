@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
   random_shuffle(order.begin(), order.end()); // shuffle the dataset
 
   unsigned iters = 1;
-  double best_bleu = 0;
+  double best_bleu = -1;
   // Initialize loss 
   double loss = 0;
   double sum_loss = 0;
@@ -322,7 +322,7 @@ int main(int argc, char** argv) {
         sum_loss = 0;
       }
     }
-    lr_decay /= 2;
+    //lr_decay /= 2;
   }
 
   // Free memory
