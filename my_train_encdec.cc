@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   // Load datasets ---------------------------------------------------------------------------------
 
   // Dictionary
-  Dict* dictIn, dictOut;
+  Dict *dictIn, *dictOut;
   ifstream dic_src_ifs("./dict_src.txt");
   ifstream dic_trg_ifs("./dict_trg.txt");
   if (!dic_src_ifs||!dic_trg_ifs){
