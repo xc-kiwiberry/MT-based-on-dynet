@@ -115,7 +115,7 @@ public:
 
   void save(const string& fileName) {
     ofstream ofs(fileName);
-    ofs << size();
+    ofs << size() << endl;
     for (const auto& word: _words){
       ofs << word << endl;
     }
