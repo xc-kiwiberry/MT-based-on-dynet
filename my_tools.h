@@ -39,6 +39,17 @@ private:
   }
 
 public:
+  Dict(const string& fileName): _limit(-1){
+    ifstream ifs(fileName);
+    int num;
+    ifs >> num;
+    for (int i = 0; i < num; i++){
+      string word;
+      ifs >> word;
+      _words.push_back(word);
+      _word2id.insert(_psi(word, i));
+    }
+  }
   Dict(const string& fileName, const int limit): _limit(limit) {
 
     _word2id.clear();
@@ -102,6 +113,13 @@ public:
     return res;
   }
 
+  void save(const string& fileName) {
+    ofstream ofs(fileName);
+    ofs << size();
+    for (const auto& word: _words){
+      ofs << word << endl;
+    }
+  }
 };
 
 void read_corpus(const string &fileName, const string varName, Dict &dict, vector<vector<int>>& vec){

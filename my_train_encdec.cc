@@ -41,13 +41,26 @@ int main(int argc, char** argv) {
   // Load datasets ---------------------------------------------------------------------------------
 
   // Dictionary
-  cerr << "Building dictionary..." << endl;
-  Dict dictIn(params.train_file, params.SRC_DIC_LIM), dictOut(params.train_labels_file, params.TGT_DIC_LIM);
+  ifstream dic_src_ifs("./dict_src.txt");
+  ifstream dic_trg_ifs("./dict_trg.txt");
+  if (!dic_src_ifs||!dic_trg_ifs){
+    cerr << "dictionary doesn't exist, Building dictionary..." << endl;
+    Dict dictIn(params.train_file, params.SRC_DIC_LIM), dictOut(params.train_labels_file, params.TGT_DIC_LIM);
+    cerr << "Dictionary build success." << endl;
+    dictIn.save("./dict_src.txt");
+    dictOut.save("./dict_trg.txt");
+    cerr << "Dictionary save success." << endl;
+  }
+  else {
+    cerr << "dictionary exist, Loading dictionary..." << endl;
+    Dict dictIn("./dict_src.txt"), dictOut("./dict_trg.txt");
+    cerr << "Dictionary load success." << endl;
+  }
   unsigned SRC_VOCAB_SIZE = dictIn.size();
   unsigned TGT_VOCAB_SIZE = dictOut.size();
-  cerr << "Dictionary build success." << endl;
   cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
   cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
+  
 
   // Read training data
   read_corpus(params.train_file, "training", dictIn, training);
