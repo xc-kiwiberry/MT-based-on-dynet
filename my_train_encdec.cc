@@ -50,16 +50,21 @@ int main(int argc, char** argv) {
     dictIn.save("./dict_src.txt");
     dictOut.save("./dict_trg.txt");
     cerr << "Dictionary save success." << endl;
+    unsigned SRC_VOCAB_SIZE = dictIn.size();
+    unsigned TGT_VOCAB_SIZE = dictOut.size();
+    cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
+    cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
   }
   else {
     cerr << "dictionary exist, Loading dictionary..." << endl;
     Dict dictIn("./dict_src.txt"), dictOut("./dict_trg.txt");
     cerr << "Dictionary load success." << endl;
+    unsigned SRC_VOCAB_SIZE = dictIn.size();
+    unsigned TGT_VOCAB_SIZE = dictOut.size();
+    cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
+    cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
   }
-  unsigned SRC_VOCAB_SIZE = dictIn.size();
-  unsigned TGT_VOCAB_SIZE = dictOut.size();
-  cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
-  cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
+  
   
 
   // Read training data
