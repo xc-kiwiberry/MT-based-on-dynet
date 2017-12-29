@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
           ComputationGraph cg;
           vector<unsigned> res = lm.generate(dev[i], miss, cg);
           for (int j = 0; j < res.size()-1 ; ++j) 
-            ofs_dev_trans << dictOut.convert(res[j]) << " ";
+            ofs_dev_trans << dictOut->convert(res[j]) << " ";
           ofs_dev_trans << endl;
           for (int j = 0; j < 100; j++) cerr << "\b";
           cerr << "already translated " << i+1 << " sents. ";
