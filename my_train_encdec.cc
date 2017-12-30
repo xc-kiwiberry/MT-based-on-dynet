@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   ifstream dic_src_ifs(params.dic_src_file);
   ifstream dic_trg_ifs(params.dic_trg_file);
   if (!dic_src_ifs||!dic_trg_ifs){
-    cerr << "dictionary doesn't exist, Building dictionary..." << endl;
+    cerr << "Dictionary doesn't exist, Building dictionary..." << endl;
     dictIn  = new Dict(params.train_file, params.SRC_DIC_LIM);
     dictOut = new Dict(params.train_labels_file, params.TGT_DIC_LIM);
     cerr << "Dictionary build success." << endl;
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
   else {
     dic_src_ifs.close();
     dic_trg_ifs.close();
-    cerr << "dictionary exist, Loading dictionary..." << endl;
+    cerr << "Dictionary exist, Loading dictionary..." << endl;
     dictIn  = new Dict(params.dic_src_file);
     dictOut = new Dict(params.dic_trg_file);
     cerr << "Dictionary load success." << endl;
