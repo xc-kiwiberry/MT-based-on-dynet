@@ -16,12 +16,12 @@ int main(int argc, char** argv) {
   get_args(argc, argv, params, TEST);
 
   // Dictionary
-  cerr << "Building dictionary..." << endl;
-  Dict dictIn(params.train_file, params.SRC_DIC_LIM), dictOut(params.train_labels_file, params.TGT_DIC_LIM);
+  cerr << "Loading dictionary..." << endl;
+  Dict dictIn("./dict_src.txt"), dictOut("./dict_trg.txt");
 
   unsigned SRC_VOCAB_SIZE = dictIn.size();
   unsigned TGT_VOCAB_SIZE = dictOut.size();
-  cerr << "Dictionary build success." << endl;
+  cerr << "Dictionary load success." << endl;
   cerr << "SRC_VOCAB_SIZE = " << SRC_VOCAB_SIZE << endl;
   cerr << "TGT_VOCAB_SIZE = " << TGT_VOCAB_SIZE << endl;
 
