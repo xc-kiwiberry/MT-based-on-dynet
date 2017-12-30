@@ -42,21 +42,23 @@ int main(int argc, char** argv) {
 
   // Dictionary
   Dict *dictIn, *dictOut;
-  ifstream dic_src_ifs("./dict_src.txt");
-  ifstream dic_trg_ifs("./dict_trg.txt");
+  ifstream dic_src_ifs(params.dic_src_file);
+  ifstream dic_trg_ifs(params.dic_trg_file);
   if (!dic_src_ifs||!dic_trg_ifs){
     cerr << "dictionary doesn't exist, Building dictionary..." << endl;
-    dictIn = new Dict(params.train_file, params.SRC_DIC_LIM);
+    dictIn  = new Dict(params.train_file, params.SRC_DIC_LIM);
     dictOut = new Dict(params.train_labels_file, params.TGT_DIC_LIM);
     cerr << "Dictionary build success." << endl;
-    dictIn->save("./dict_src.txt");
-    dictOut->save("./dict_trg.txt");
+    dictIn->save(params.dic_src_file);
+    dictOut->save(params.dic_trg_file);
     cerr << "Dictionary save success." << endl;
   }
   else {
+    dic_src_ifs.close();
+    dic_trg_ifs.close();
     cerr << "dictionary exist, Loading dictionary..." << endl;
-    dictIn = new Dict("./dict_src.txt");
-    dictOut = new Dict("./dict_trg.txt");
+    dictIn  = new Dict(params.dic_src_file);
+    dictOut = new Dict(params.dic_trg_file);
     cerr << "Dictionary load success." << endl;
   }
   unsigned SRC_VOCAB_SIZE = dictIn->size();

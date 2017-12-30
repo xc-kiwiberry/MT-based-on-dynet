@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 
   // Dictionary
   cerr << "Loading dictionary..." << endl;
-  Dict dictIn("./dict_src.txt"), dictOut("./dict_trg.txt");
+  Dict dictIn(params.dic_src_file), dictOut(params.dic_trg_file);
 
   unsigned SRC_VOCAB_SIZE = dictIn.size();
   unsigned TGT_VOCAB_SIZE = dictOut.size();

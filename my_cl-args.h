@@ -27,7 +27,8 @@ struct Params {
   string test_labels_file = "";
 
   string model_file = "";
-  //string dic_file = "";
+  string dic_src_file = "dict_src.txt";
+  string dic_trg_file = "dict_trg.txt";
 
   // default Hyperparameters
   unsigned LAYERS = 1;
@@ -112,15 +113,23 @@ void get_args(int argc,
       istringstream d(argv[i + 1]);
       d >> params.dev_labels_file;
       i++;
-    } /*else if (arg == "--dict") {
+    } else if (arg == "--dict_src" ||  arg == "-ds") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
       }
       istringstream d(argv[i + 1]);
-      d >> params.dic_file;
+      d >> params.dic_src_file;
       i++;
-    } */else if (arg == "--test" || arg == "-ts") {
+    } else if (arg == "--dict_trg" ||  arg == "-dt") {
+      if (i + 1 == argc) {
+        std::cerr << "No matching argument for " << arg << std::endl;
+        abort();
+      }
+      istringstream d(argv[i + 1]);
+      d >> params.dic_trg_file;
+      i++;
+    } else if (arg == "--test" || arg == "-ts") {
       if (i + 1 == argc) {
         std::cerr << "No matching argument for " << arg << std::endl;
         abort();
@@ -279,9 +288,9 @@ void get_args(int argc,
       throw invalid_argument(ss.str());
     }
   } else if (task == TEST) { 
-    if (params.model_file == "" || params.train_file == "" || params.train_labels_file == "" || params.test_file == "") {
+    if (params.model_file == "" || params.test_file == "") {
       stringstream ss;
-      ss << "Usage: " << argv[0] << " -m [model_file] -t [train_file] -tl [train_labels_file] -ts [test_file]";
+      ss << "Usage: " << argv[0] << " -m [model_file] -ts [test_file]";
       throw invalid_argument(ss.str());
     }
   }
