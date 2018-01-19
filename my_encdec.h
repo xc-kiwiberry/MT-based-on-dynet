@@ -167,7 +167,7 @@ public:
         const unsigned islen = insent.size();
         vector<Expression> i_x_t(islen);
         for (int t = 0; t < islen; ++t) {
-            i_x_t[t] = dropout(lookup(cg, p_ec, insent[t]), 0.2);
+            i_x_t[t] = lookup(cg, p_ec, insent[t]);
         }
 
         // Forward encoder -------------------------------------------------------------------------

@@ -115,6 +115,7 @@ int main(int argc, char** argv) {
   double ratioTrain = fGiveMaskAndCalcCov(training, train_mask);              
   double ratioTrainLabel = fGiveMaskAndCalcCov(training_label, train_label_mask); 
   cerr << "corpus processed successfully. " << endl;
+  cerr << "remaining " << trainning.size() << " lines." << endl;
   cerr << "In training set, Dictionary covers " << setprecision(3) << ratioTrain << "% words." << endl;
   cerr << "In training_label set, Dictionary covers " << setprecision(3) << ratioTrainLabel << "% words." << endl;
 
