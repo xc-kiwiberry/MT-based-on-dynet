@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
   debug(x);
   return 0;//*/
 
-  // Fetch program specific parameters (see ../utils/cl-args.h) ------------------------------------
+  // Fetch program specific parameters (see ../utils/cl-args.h) -----------------------------------
   //Params params;
   get_args(argc, argv, params, TRAIN);
   if (params.mrt_enable) {
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     params.BATCH_SIZE = 1;
   }
   else cerr << "Training criteria is MLE." << endl;
-  // Load datasets ---------------------------------------------------------------------------------
+  // Load datasets --------------------------------------------------------------------------------
 
   // Dictionary
   Dict *dictIn, *dictOut;
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
   ofs_log.close();
   mkdir("models", 0755);
 
-  // Run indefinitely
+  // Run infinitely
   while (true) {
     for (unsigned si = 0; si < num_batches; ++si, ++iters) {
       // train a batch
